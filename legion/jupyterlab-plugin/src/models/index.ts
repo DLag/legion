@@ -1,0 +1,1 @@
+export { ILocalDeploymentInformation } from './local';

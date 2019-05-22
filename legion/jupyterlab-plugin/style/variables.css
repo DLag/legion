@@ -1,0 +1,18 @@
+/*-----------------------------------------------------------------------------
+| Copyright (c) Jupyter Development Team.
+| Distributed under the terms of the Modified BSD License.
+|----------------------------------------------------------------------------*/
+@import url('https://fonts.googleapis.com/css?family=Oswald');
+
+:root {
+  --jp-icon-legion-cloud: url('./images/cloud.svg');
+  --jp-icon-legion-local: url('./images/gears.svg');
+  --jp-icon-legion-lock: url('./images/lock.svg');
+}
+
+[data-theme-light="true"] {
+}
+
+[data-theme-light="false"] {
+
+}
