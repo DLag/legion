@@ -220,4 +220,3 @@ def get_local_builds(client):
             ))
 
     return response
-

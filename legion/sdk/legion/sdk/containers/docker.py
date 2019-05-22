@@ -31,7 +31,6 @@ from legion.sdk.containers.definitions import ModelBuildParameters
 
 from legion.sdk.model import load_meta_model, PROPERTY_TRAINING_WORKING_DIRECTORY
 from legion.sdk.utils import get_installed_packages, get_list_of_requirements, copy_file, copy_directory_contents
-from legion.sdk import utils as legion_utils
 
 LOGGER = logging.getLogger(__name__)
 MODEL_TARGET_WORKSPACE = '/app'
@@ -221,7 +220,7 @@ def build_docker_image(client: docker.client.DockerClient, params: ModelBuildPar
 
     prepare_build(workspace_path, model_id, params.model_file)
 
-    with legion_utils.TemporaryFolder('legion-docker-build') as temp_directory:
+    with utils.TemporaryFolder('legion-docker-build') as temp_directory:
         target_model_file = os.path.join(MODEL_TARGET_WORKSPACE, model_id)
 
         # Copy additional files for docker build
@@ -229,7 +228,7 @@ def build_docker_image(client: docker.client.DockerClient, params: ModelBuildPar
             os.path.dirname(__file__),
             '..', 'templates', 'docker_files'
         ))
-        legion_utils.copy_directory_contents(additional_directory, temp_directory.path)
+        utils.copy_directory_contents(additional_directory, temp_directory.path)
 
         # ALL Filesystem modification below next line would be ignored
         captured_image_id = commit_image(client, container_id)
@@ -247,7 +246,7 @@ def build_docker_image(client: docker.client.DockerClient, params: ModelBuildPar
         )
         LOGGER.info('Executing %s', symlink_create_command)
 
-        docker_file_content = legion_utils.render_template('Dockerfile.tmpl', {
+        docker_file_content = utils.render_template('Dockerfile.tmpl', {
             'MODEL_PORT': config.LEGION_PORT,
             'DOCKER_BASE_IMAGE_ID': captured_image_id,
             'MODEL_ID': model_id,
@@ -368,7 +367,7 @@ def push_image_to_registry(client, image, external_image_name):
     LOGGER.info('Successfully pushed image {}:{}'.format(image_and_registry, version))
 
     image_with_version = '{}/{}:{}'.format(registry, image_name, version)
-    legion_utils.send_header_to_stderr(headers.IMAGE_TAG_EXTERNAL, image_with_version)
+    utils.send_header_to_stderr(headers.IMAGE_TAG_EXTERNAL, image_with_version)
 
 
 def build_model_docker_image(params: ModelBuildParameters, container_id: typing.Optional[str] = None) -> str:
@@ -385,10 +384,10 @@ def build_model_docker_image(params: ModelBuildParameters, container_id: typing.
         client, params, container_id
     )
 
-    legion_utils.send_header_to_stderr(headers.IMAGE_ID_LOCAL, image.id)
+    utils.send_header_to_stderr(headers.IMAGE_ID_LOCAL, image.id)
 
     if image.tags:
-        legion_utils.send_header_to_stderr(headers.IMAGE_TAG_LOCAL, image.tags[0])
+        utils.send_header_to_stderr(headers.IMAGE_TAG_LOCAL, image.tags[0])
 
     if params.push_to_registry:
         push_image_to_registry(client, image, params.push_to_registry)
