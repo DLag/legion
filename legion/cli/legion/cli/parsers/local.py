@@ -48,9 +48,9 @@ def build_model(args):
         raise Exception('Model file has not been provided')
 
     params = ModelBuildParameters(model_file,
+                                  str(uuid.uuid4()),
                                   args.docker_image_tag,
-                                  args.push_to_registry,
-                                  build_id=str(uuid.uuid4()))
+                                  args.push_to_registry)
 
     model_image = build_model_docker_image(params, args.container_id)
 
