@@ -227,6 +227,15 @@ class LocalEdiClient:
         client = build_docker_client()
         return local_deploy.undeploy_model(client, deployment_name, model, version, ignore_not_found)
 
+    def get_builds(self):
+        """
+        Get available builds
+
+        :return: list[:py:class:`legion.containers.definitions.ModelBuildInformation`] -- registered model builds
+        """
+        client = build_docker_client()
+        return local_deploy.get_local_builds(client)
+
     def __repr__(self):
         """
         Get string representation of object

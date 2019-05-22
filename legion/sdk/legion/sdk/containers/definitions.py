@@ -45,6 +45,12 @@ class ModelBuildResult(typing.NamedTuple):
     error: str = None
 
 
+class ModelBuildInformation(typing.NamedTuple):
+    image_name: str
+    model_id: str
+    model_version: str
+
+
 class ModelIdVersion:
     """
     Holder for model ID and version
