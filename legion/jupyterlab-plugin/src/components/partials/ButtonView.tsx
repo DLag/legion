@@ -16,10 +16,10 @@
 import * as React from 'react';
 import * as style from '../../componentsStyle/ButtonStyle';
 
-/** Interface for GitPanel component state */
+/** Interface for ButtonView component state */
 export interface IButtonViewNodeState { }
 
-/** Interface for GitPanel component props */
+/** Interface for ButtonView component props */
 export interface IButtonViewNodeProps {
   text: string;
   onClick: () => void;
@@ -32,7 +32,6 @@ export interface IButtonViewWithStyleNodeProps extends IButtonViewNodeProps {
   style: string;
 }
 
-/** A React component for the git extension's main display */
 export class ButtonView extends React.Component<
 IButtonViewWithStyleNodeProps,
   IButtonViewNodeState

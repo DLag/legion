@@ -32,6 +32,8 @@ jupyter lab build
 ```
 
 ## Third-party components
+
+### Icons
 * cloud - https://www.iconfinder.com/icons/211653/cloud_icon
 * gears - https://www.iconfinder.com/icons/1608900/gears_icon
 * lock - https://www.iconfinder.com/icons/1608769/lock_icon

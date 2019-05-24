@@ -16,16 +16,15 @@
 
 import * as React from 'react';
 
-/** Interface for GitPanel component state */
+/** Interface for ClusterInfoView component state */
 export interface IClusterInfoViewNodeState {}
 
-/** Interface for GitPanel component props */
+/** Interface for ClusterInfoView component props */
 export interface IClusterInfoViewNodeProps {
   clusterName: string;
   userName: string;
 }
 
-/** A React component for the git extension's main display */
 export class ClusterInfoView extends React.Component<
   IClusterInfoViewNodeProps,
   IClusterInfoViewNodeState

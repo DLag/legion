@@ -18,7 +18,7 @@ import * as React from 'react';
 import * as style from '../../componentsStyle/ListingStyle';
 
 
-/** Interface for GitPanel component state */
+/** Interface for ListingView component state */
 export interface IListingViewNodeState {}
 
 export interface IListingColumnInformation {
@@ -34,7 +34,7 @@ export interface IListingRowValue {
   onClick: () => void;
 }
 
-/** Interface for GitPanel component props */
+/** Interface for ListingView component props */
 export interface IListingViewNodeProps {
   title: string;
   topButton: any;
@@ -43,7 +43,6 @@ export interface IListingViewNodeProps {
   items: Array<IListingRowValue>;
 }
 
-/** A React component for the git extension's main display */
 export class ListingView extends React.Component<
   IListingViewNodeProps,
   IListingViewNodeState

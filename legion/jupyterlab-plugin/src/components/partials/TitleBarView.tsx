@@ -20,16 +20,15 @@ import * as style from '../../componentsStyle/TitleBarStyle';
 import { SmallButtonView } from './ButtonView';
 
 
-/** Interface for GitPanel component state */
+/** Interface for TitleBarView component state */
 export interface ITitleBarViewNodeState { }
 
-/** Interface for GitPanel component props */
+/** Interface for TitleBarView component props */
 export interface ITitleBarViewNodeProps {
   text: string;
   onRefresh: () => void;
 }
 
-/** A React component for the git extension's main display */
 export class TitleBarView extends React.Component<
   ITitleBarViewNodeProps,
   ITitleBarViewNodeState
