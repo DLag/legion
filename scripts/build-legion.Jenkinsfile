@@ -149,13 +149,6 @@ pipeline {
         }
         stage("Build Docker images & Run Tests") {
             parallel {
-                stage("Build Edge Docker image") {
-                    steps {
-                        script {
-                            legion.buildLegionImage('k8s-edge', '.', 'containers/edge/Dockerfile')
-                        }
-                    }
-                }
                 stage("Build Fluentd Docker image") {
                     steps {
                         script {
@@ -374,13 +367,6 @@ pipeline {
                     steps {
                         script {
                             legion.uploadDockerImage('k8s-feedback-aggregator')
-                        }
-                    }
-                }
-                stage('Upload Edge Docker Image') {
-                    steps {
-                        script {
-                            legion.uploadDockerImage('k8s-edge')
                         }
                     }
                 }
