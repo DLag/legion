@@ -52,7 +52,11 @@ export function addCommands(options: IAddCommandsOptions) {
                 dialogs.showLoginDialog()
                 .then(({ button, value }) => {
                     if (button.accept){
-                        console.log('Authorizing on a cluster', value.cluster, 'with token', value.authString);
+                        options.api.cloud.getCloudDeployments(value).then(_ => {
+                            showErrorMessage('Authorized', 'You have been successfully authorized');
+                        }).catch(err => {
+                            showErrorMessage('Authorization on a cluster failed', err);
+                        })
                     }
                 });
             } catch (err) {

@@ -100,7 +100,7 @@ export class ListingView extends React.Component<
             <span key={idx} className={this.getHeaderItemStyle(idx)}>{columnInformation.name}</span>
           )}
         </div>
-        <div>
+        <div className={style.listingData}>
           {this.props.items.map((row, idx) => this.renderRow(row, idx))}
         </div>
       </div>

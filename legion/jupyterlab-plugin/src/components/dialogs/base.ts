@@ -26,9 +26,6 @@ export interface IChooseVariant {
 }
 
 class ChooseDialog extends Widget {
-    /**
-     * Construct a new "rename" dialog.
-     */
     constructor(body: string, variants: Array<IChooseVariant>) {
         super({ node: Private.buildChooseDialogBody(body, variants) });
     }
@@ -52,6 +49,27 @@ export function showChooseDialog(title: string, body: string, variants: Array<IC
     })
 }
 
+class PromptDialog extends Widget {
+    constructor(body: string,) {
+        super({ node: Private.buildPromptDialogBody(body) });
+    }
+
+    getValue(): string {
+        let inputs = this.node.getElementsByTagName('input');
+        const targetInput = inputs[0] as HTMLInputElement;
+
+        return targetInput.value;
+    }
+}
+
+export function showPromptDialog(title: string, body: string, confirm: string, warn: boolean) {
+    return showDialog({
+        title: title,
+        body: new PromptDialog(body),
+        buttons: [Dialog.cancelButton(), Dialog.okButton({ label: confirm, displayType: warn ? 'warn' : 'default' })]
+    })
+}
+
 namespace Private {
     export function buildChooseDialogBody(bodyText: string, variants: Array<IChooseVariant>) {
         let body = document.createElement('div');
@@ -71,6 +89,22 @@ namespace Private {
         });
 
         body.appendChild(select);
+
+        return body;
+    }
+
+    export function buildPromptDialogBody(bodyText: string) {
+        let body = document.createElement('div');
+
+        let description = document.createElement('span');
+        description.className = 'jp-Dialog-body';
+        description.textContent = bodyText;
+        body.appendChild(description);
+
+        let input = document.createElement('input');
+        input.className = style.inputFieldStyle;
+
+        body.appendChild(input);
 
         return body;
     }

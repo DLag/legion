@@ -15,7 +15,7 @@
  */
 import { ServerConnection } from '@jupyterlab/services';
 
-import { httpRequest, IApiGroup, legionApiRootURL } from './base';
+import { httpRequest, IApiGroup, legionApiRootURL, ICloudCredentials } from './base';
 import * as models from '../models/cloud';
 
 export namespace URLs {
@@ -26,23 +26,23 @@ export namespace URLs {
 
 export interface ICloudApi {
     // Builds
-    createCloudTraining: (request: models.ICloudTrainingRequest) => Promise<models.ICloudTrainingResponse>,
-    getCloudTrainings: () => Promise<Array<models.ICloudTrainingResponse>>,
+    createCloudTraining: (request: models.ICloudTrainingRequest, credentials: ICloudCredentials) => Promise<models.ICloudTrainingResponse>,
+    getCloudTrainings: (credentials: ICloudCredentials) => Promise<Array<models.ICloudTrainingResponse>>,
 
     // Deployments
-    getCloudDeployments: () => Promise<Array<models.ICloudDeploymentResponse>>,
-    createCloudDeployment: (request: models.ICloudDeploymentCreateRequest) => Promise<models.ICloudDeploymentResponse>,
-    removeCloudDeployment: (request: models.ICloudDeploymentRemoveRequest) => Promise<void>,
+    getCloudDeployments: (credentials: ICloudCredentials) => Promise<Array<models.ICloudDeploymentResponse>>,
+    createCloudDeployment: (request: models.ICloudDeploymentCreateRequest, credentials: ICloudCredentials) => Promise<models.ICloudDeploymentResponse>,
+    removeCloudDeployment: (request: models.ICloudDeploymentRemoveRequest, credentials: ICloudCredentials) => Promise<void>,
 
     // Aggregated
-    getCloudAllEntities: () => Promise<models.ILocalAllEntitiesResponse>,
+    getCloudAllEntities: (credentials: ICloudCredentials) => Promise<models.ICloudAllEntitiesResponse>,
 }
 
 export class CloudApi implements IApiGroup, ICloudApi {
     // Trainings
-    async createCloudTraining(request: models.ICloudTrainingRequest): Promise<models.ICloudTrainingResponse> {
+    async createCloudTraining(request: models.ICloudTrainingRequest, credentials: ICloudCredentials): Promise<models.ICloudTrainingResponse> {
         try {
-            let response = await httpRequest(URLs.cloudTrainingsUrl, 'POST', request);
+            let response = await httpRequest(URLs.cloudTrainingsUrl, 'POST', request, credentials);
             if (response.status !== 200) {
                 const data = await response.json();
                 throw new ServerConnection.ResponseError(response, data.message);
@@ -52,9 +52,9 @@ export class CloudApi implements IApiGroup, ICloudApi {
             throw new ServerConnection.NetworkError(err);
         }
     }
-    async getCloudTrainings(): Promise<Array<models.ICloudTrainingResponse>> {
+    async getCloudTrainings(credentials: ICloudCredentials): Promise<Array<models.ICloudTrainingResponse>> {
         try {
-            let response = await httpRequest(URLs.cloudTrainingsUrl, 'GET', null);
+            let response = await httpRequest(URLs.cloudTrainingsUrl, 'GET', null, credentials);
             if (response.status !== 200) {
                 const data = await response.json();
                 throw new ServerConnection.ResponseError(response, data.message);
@@ -66,9 +66,9 @@ export class CloudApi implements IApiGroup, ICloudApi {
     }
 
     // Deployments
-    async getCloudDeployments(): Promise<Array<models.ICloudDeploymentResponse>> {
+    async getCloudDeployments(credentials: ICloudCredentials): Promise<Array<models.ICloudDeploymentResponse>> {
         try {
-            let response = await httpRequest(URLs.cloudDeploymentsUrl, 'GET', null);
+            let response = await httpRequest(URLs.cloudDeploymentsUrl, 'GET', null, credentials);
             if (response.status !== 200) {
                 const data = await response.json();
                 throw new ServerConnection.ResponseError(response, data.message);
@@ -78,9 +78,9 @@ export class CloudApi implements IApiGroup, ICloudApi {
             throw new ServerConnection.NetworkError(err);
         }
     }
-    async createCloudDeployment(request: models.ICloudDeploymentCreateRequest): Promise<models.ICloudDeploymentResponse> {
+    async createCloudDeployment(request: models.ICloudDeploymentCreateRequest, credentials: ICloudCredentials): Promise<models.ICloudDeploymentResponse> {
         try {
-            let response = await httpRequest(URLs.cloudDeploymentsUrl, 'POST', request);
+            let response = await httpRequest(URLs.cloudDeploymentsUrl, 'POST', request, credentials);
             if (response.status !== 200) {
                 const data = await response.json();
                 throw new ServerConnection.ResponseError(response, data.message);
@@ -90,9 +90,9 @@ export class CloudApi implements IApiGroup, ICloudApi {
             throw new ServerConnection.NetworkError(err);
         }
     }
-    async removeCloudDeployment(request: models.ICloudDeploymentRemoveRequest): Promise<void> {
+    async removeCloudDeployment(request: models.ICloudDeploymentRemoveRequest, credentials: ICloudCredentials): Promise<void> {
         try {
-            let response = await httpRequest(URLs.cloudDeploymentsUrl, 'DELETE', request);
+            let response = await httpRequest(URLs.cloudDeploymentsUrl, 'DELETE', request, credentials);
             if (response.status !== 200) {
                 const data = await response.json();
                 throw new ServerConnection.ResponseError(response, data.message);
@@ -104,9 +104,9 @@ export class CloudApi implements IApiGroup, ICloudApi {
     }
 
     // Aggregated
-    async getCloudAllEntities(): Promise<models.ILocalAllEntitiesResponse> {
+    async getCloudAllEntities(credentials: ICloudCredentials): Promise<models.ICloudAllEntitiesResponse> {
         try {
-            let response = await httpRequest(URLs.cloudAllDataUrl, 'GET', null);
+            let response = await httpRequest(URLs.cloudAllDataUrl, 'GET', null, credentials);
             if (response.status !== 200) {
                 const data = await response.json();
                 throw new ServerConnection.ResponseError(response, data.message);

@@ -37,10 +37,8 @@ export namespace CommandIDs {
 
     // Local
     export const newLocalBuild = 'legion:local-build-new';
-    export const showLocalBuildInformation = 'legion:local-build-info';
     export const newLocalDeployment = 'legion:local-deployment-new';
     export const removeLocalDeployment = 'legion:local-deployment-remove';
-    export const showLocalDeploymentInformation = 'legion:local-deployment-info';
 
     // Settings
     export const refreshLocal = 'legion:refresh-local-mode';

@@ -189,9 +189,27 @@ class LocalDeploymentsHandler(BaseLocalLegionHandler):
             raise HTTPError(log_message='Can not deploy model locally') from query_exception
 
         if deployments:
-            return self.transform_local_deployment(deployments[0])
+            return self.finish(json.dumps(self.transform_local_deployment(deployments[0])))
         else:
             raise HTTPError(log_message='Back-end did not return information about created deployment')
+
+    def delete(self):
+        """
+        Remove local deployment
+        :return:
+        """
+        try:
+            data = self.get_json_body()
+            name = data.get('name')
+        except Exception as parsing_exception:
+            raise HTTPError(log_message='Invalid data from client') from parsing_exception
+
+        try:
+            self.client.undeploy(name)
+        except Exception as query_exception:
+            raise HTTPError(log_message='Can not remove local model deployment') from query_exception
+
+        self.finish(json.dumps({}))
 
 
 class LocalBuildStatusHandler(BaseLocalLegionHandler):

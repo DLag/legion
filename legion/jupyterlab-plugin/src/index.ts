@@ -112,11 +112,13 @@ export class LegionExtension implements ILegionExtension {
     if (true) {
       this.localTabWidget = createLocalSidebarWidget(
         app,
-        { manager: app.serviceManager }
+        { manager: app.serviceManager, state: this.apiState }
       );
       this.localTabWidget.id = 'legion-local-sessions-widget';
       this.localTabWidget.title.iconClass = `jp-SideBar-tabIcon ${localModeTabStyle}`;
       this.localTabWidget.title.caption = 'Legion local mode';
+
+      this.apiState.onLocalDataChanged.connect(_ => this.localTabWidget.refresh());
 
       restorer.add(this.localTabWidget, 'legion-local-sessions');
       app.shell.addToLeftArea(this.localTabWidget, { rank: 200 });
@@ -126,11 +128,13 @@ export class LegionExtension implements ILegionExtension {
     if (true) {
       this.cloudTabWidget = createCloudSidebarWidget(
         app,
-        { manager: app.serviceManager }
+        { manager: app.serviceManager, state: this.apiState }
       );
       this.cloudTabWidget.id = 'legion-cloud-sessions-widget';
       this.cloudTabWidget.title.iconClass = `jp-SideBar-tabIcon ${cloudModeTabStyle}`;
       this.cloudTabWidget.title.caption = 'Legion cloud mode';
+
+      this.apiState.onCloudDataChanged.connect(_ => this.cloudTabWidget.refresh());
 
       restorer.add(this.cloudTabWidget, 'legion-cloud-sessions');
       app.shell.addToLeftArea(this.cloudTabWidget, { rank: 210 });

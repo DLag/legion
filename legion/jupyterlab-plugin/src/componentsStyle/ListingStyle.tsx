@@ -68,6 +68,11 @@ export const listingFirstColumn = style({
     wordWrap: 'normal'
 });
 
+export const listingData = style({
+    maxHeight: 250,
+    overflowY: 'auto'
+});
+
 export const listingRowItem = style({
     whiteSpace: 'nowrap',
     overflow: 'hidden',

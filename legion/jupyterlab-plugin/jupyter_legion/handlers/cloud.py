@@ -20,7 +20,6 @@ from tornado.web import HTTPError
 
 from legion.sdk.clients.training import ModelTrainingClient, ModelTraining
 from legion.sdk.clients.deployment import ModelDeploymentClient, ModelDeployment
-from legion.sdk.containers.definitions import ModelDeploymentDescription, ModelBuildInformation
 
 from .base import BaseLegionHandler
 
@@ -51,7 +50,7 @@ class BaseCloudLegionHandler(BaseLegionHandler):
     def transform_cloud_deployment(deployment: ModelDeployment) -> dict:
         """
         Transform cloud deployment object to dict
-        :type deployment: ModelDeploymentDescription
+        :type deployment: ModelDeployment
         :param deployment: deployment object
         :return: dict
         """
@@ -114,6 +113,26 @@ class CloudDeploymentsHandler(BaseCloudLegionHandler):
             self.finish(json.dumps(self.get_cloud_deployments()))
         except Exception as query_exception:
             raise HTTPError(log_message='Can not query cloud deployments') from query_exception
+
+    def delete(self):
+        """
+        Remove local deployment
+        :return:
+        """
+        try:
+            data = self.get_json_body()
+            name = data.get('name')
+        except Exception as parsing_exception:
+            raise HTTPError(log_message='Invalid data from client') from parsing_exception
+
+        try:
+            client = self.build_cloud_client(ModelDeploymentClient)
+            client.delete(name)
+        except Exception as query_exception:
+            raise HTTPError(log_message='Can not remove cluster model deployment') from query_exception
+
+        self.finish(json.dumps({}))
+
 
 
 class CloudAllEntitiesHandler(BaseCloudLegionHandler):

@@ -37,7 +37,7 @@ export interface ICloudDeploymentResponse {
 /**
  * All data for cloud widget
  */
-export interface ILocalAllEntitiesResponse {
+export interface ICloudAllEntitiesResponse {
     trainings: Array<ICloudTrainingResponse>,
     deployments: Array<ICloudDeploymentResponse>
 }

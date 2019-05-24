@@ -43,7 +43,7 @@ export function addCommands(options: IAddCommandsOptions) {
         execute: () => {
             try {
                 options.api.local.startLocalBuild().then(() => {
-                    console.log('Image has been built');
+                    console.log('Image build has been started');
                 }).catch(err => {
                     showErrorMessage('Can not build model locally', err);
                 });
@@ -56,9 +56,43 @@ export function addCommands(options: IAddCommandsOptions) {
     commands.addCommand(CommandIDs.newLocalDeployment, {
         label: 'Deploy Legion model locally',
         caption: 'Deploy Legion model (local mode)',
-        execute: () => {
+        execute: args => {
             try {
-                console.log('Local model deploying has been started');
+                const image = args['image'] as string;
+                const name = args['name'] as string;
+                if (name){
+                    options.api.local.createLocalDeployment({
+                        name,
+                        image,
+                        port: 0
+                    }).then(_ => {
+                        showErrorMessage('Deployment created', 'Deployment ' + name + ' has been created');
+                        commands.execute(CommandIDs.refreshLocal, {});
+                    }).catch(err => {
+                        showErrorMessage('Can not deploy image locally', err);
+                    })
+                }
+                else if (image){
+                    dialogs.showPromptDialog(
+                        'Provide name for deployment',
+                        'Please name your new deployment',
+                        'Deploy',
+                        false
+                    ).then(({value}) => commands.execute(CommandIDs.newLocalDeployment, {image: image, name: value}))
+                } else {
+                    dialogs.showChooseDialog(
+                        'Choose image to deploy',
+                        'Please choose one image from list',
+                        options.apiState.local.builds.map(build => {
+                            return {
+                                value: build.imageName,
+                                text: build.imageName
+                            }
+                        }),
+                        'Deploy image',
+                        false
+                    ).then(({value}) => commands.execute(CommandIDs.newLocalDeployment, {image: value.value}))
+                }
             } catch (err) {
                 showErrorMessage('Can not deploy model locally', err);
             }
@@ -70,37 +104,44 @@ export function addCommands(options: IAddCommandsOptions) {
         caption: 'Un-deploy Legion model (local mode)',
         execute: args => {
             try {
-                const deploymentId = args['deploymentId'] as string;
-                if (deploymentId){
+                const name = args['name'] as string;
+                if (name){
                     showDialog({
-                        title: `Removing deployment ${deploymentId}`,
-                        body: `Do you want to remove deployment ${deploymentId}?`,
+                        title: `Removing deployment`,
+                        body: `Do you want to remove deployment ${name}?`,
                         buttons: [Dialog.cancelButton(), Dialog.okButton({ label: 'Remove', displayType: 'warn' })]
                     }).then(({button}) => {
                         if (button.accept){
                             options.api.local.removeLocalDeployment({
-                                name: deploymentId
+                                name: name
                             }).then(() => {
-                                console.log('Local model deployment ' + deploymentId + ' has been removed, refreshing');
-                                commands.execute(CommandIDs.refreshLocal, {});
+                                options.api.local.removeLocalDeployment({
+                                    name: name
+                                }).then(() => {
+                                    commands.execute(CommandIDs.refreshLocal, {});
+                                }).catch(err => {
+                                    showErrorMessage('Can not remove local deployment', err);
+                                    commands.execute(CommandIDs.refreshLocal, {});
+                                })
                             }).catch(err => {
                                 showErrorMessage('Can not remove local deployment', err);
                                 commands.execute(CommandIDs.refreshLocal, {});
                             })
                         }
                     })
-                }
-                else {
+                } else {
                     dialogs.showChooseDialog(
                         'Choose deployment to remove',
                         'Please choose one deployment from list',
-                        [
-                            {value: 'dep-a', text: 'dep-a'},
-                            {value: 'dep-b', text: 'dep-b'},
-                        ],
+                        options.apiState.local.deployments.map(deployment => {
+                            return {
+                                value: deployment.name,
+                                text: deployment.name + ' on port ' + deployment.port
+                            }
+                        }),
                         'Remove deployment',
                         true
-                    ).then(({value}) => commands.execute(CommandIDs.removeLocalDeployment, {deploymentId: value.value}))
+                    ).then(({value}) => commands.execute(CommandIDs.removeLocalDeployment, {name: value.value}))
                 }
             } catch (err) {
                 showErrorMessage('Can not remove local deployment', err);
@@ -108,25 +149,4 @@ export function addCommands(options: IAddCommandsOptions) {
         }
     });
 
-    commands.addCommand(CommandIDs.showLocalDeploymentInformation, {
-        label: 'Show information about local deployment',
-        execute: args => {
-            try {
-                const deploymentId = args['deploymentId'] as string;
-                if (deploymentId){
-                    dialogs.showLocalDeploymentInformationDialog({
-                        name: deploymentId,
-                        image: 'test-image',
-                        port: 2000
-                    }).then(({ button }) => {
-                        if (button.label == dialogs.REMOVE_DEPLOYMENT_LABEL){
-                            commands.execute(CommandIDs.removeLocalDeployment, {deploymentId: deploymentId});
-                        }
-                    })
-                }
-            } catch (err) {
-                showErrorMessage('Can not remove local deployment', err);
-            }
-        }
-    });
 }

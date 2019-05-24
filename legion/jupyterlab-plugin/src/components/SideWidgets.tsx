@@ -22,10 +22,10 @@ import { JupyterLab } from '@jupyterlab/application';
 
 import { Message } from '@phosphor/messaging';
 import { Widget } from '@phosphor/widgets';
-import { ISignal, Signal } from '@phosphor/signaling';
 
 import { LocalWidgetView } from './LocalWidgetView';
 import { CloudWidgetView } from './CloudWidgetView';
+import { IApiState } from '../models';
 
 
 /**
@@ -42,6 +42,11 @@ export interface IOptions {
    * The default is a shared renderer instance.
    */
   renderer?: IRenderer;
+
+  /**
+   * Current data state
+   */
+  state: IApiState;
 }
 
 export interface IExtendedOptions extends IOptions {
@@ -71,8 +76,7 @@ export class Renderer implements IRenderer {
 
   createNode(): HTMLElement {
     let node = document.createElement('div');
-    node.id = 'LegionSession-root';
-
+    node.id = this.nodeName;
     return node;
   }
 }
@@ -94,7 +98,7 @@ export class LegionSideWidget extends Widget {
       node: (options.renderer || new Renderer(options.defaultRenderHolder)).createNode()
     });
 
-    const element = <options.targetReactComponent app={app} />;
+    const element = <options.targetReactComponent app={app} dataState={options.state} />;
     this.component = ReactDOM.render(element, this.node);
     this.component.refresh();
   }
@@ -108,26 +112,23 @@ export class LegionSideWidget extends Widget {
     this.component.refresh();
   }
 
+  refresh(): void {
+    this.component.refresh();
+  }
+
   /**
-   * The renderer used by the running sessions widget.
+   * The renderer used by the running widget.
    */
   get renderer(): IRenderer {
     return this._renderer;
   }
 
-  /**
-   * A signal emitted when the directory listing is refreshed.
-   */
-  get refreshed(): ISignal<this, void> {
-    return this._refreshed;
-  }
 
   /**
    * Dispose of the resources used by the widget.
    */
   dispose(): void {
     this._renderer = null;
-    clearTimeout(this._refreshId);
     super.dispose();
   }
 
@@ -196,8 +197,6 @@ export class LegionSideWidget extends Widget {
   private _evtDblClick(event: MouseEvent): void {}
 
   private _renderer: IRenderer = null;
-  private _refreshId = -1;
-  private _refreshed = new Signal<this, void>(this);
 }
 
 export function createLocalSidebarWidget(app: JupyterLab, options: IOptions) : LegionSideWidget {

@@ -17,13 +17,34 @@ import * as React from 'react';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
 
 import * as style from '../../componentsStyle/dialogs';
-import { ILocalDeploymentInformation } from '../../models';
+import * as model from '../../models/local';
 
 export const REMOVE_DEPLOYMENT_LABEL = 'Remove deployment';
+export const CREATE_DEPLOYMENT_LABEL = 'Deploy model';
 
-export function showLocalDeploymentInformationDialog(deploymentInformation: ILocalDeploymentInformation) {
+export function showLocalBuildInformationDialog(build: model.ILocalBuildInformation) {
   return showDialog({
-    title: `Local deployment ${deploymentInformation.name}`,
+    title: `Local build information`,
+    body: (
+      <div>
+        <h3 className={style.fieldLabelStyle}>Image</h3>
+        <p className={style.fieldTextStyle}>{build.imageName}</p>
+        <h3 className={style.fieldLabelStyle}>Model Name</h3>
+        <p className={style.fieldTextStyle}>{build.modelName}</p>
+        <h3 className={style.fieldLabelStyle}>Model Version</h3>
+        <p className={style.fieldTextStyle}>{build.modelVersion}</p>
+      </div>
+    ),
+    buttons: [
+      Dialog.createButton({ label: CREATE_DEPLOYMENT_LABEL }),
+      Dialog.okButton({ label: 'Close window' })
+    ]
+  })
+}
+
+export function showLocalDeploymentInformationDialog(deploymentInformation: model.ILocalDeploymentInformation) {
+  return showDialog({
+    title: `Local deployment information`,
     body: (
       <div>
         <h3 className={style.fieldLabelStyle}>Deployment name</h3>
