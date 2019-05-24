@@ -10,14 +10,19 @@ const Handlers = [authorize, local, settings, ui];
 
 export { CommandIDs, IAddCommandsOptions } from './base'
 
+import { IApiState } from '../models';
+import { ILegionApi } from '../api';
+
 //import { Api } from './api';
 
 /**
  * Add the commands for the legion extension.
  */
-export function addCommands(app: JupyterLab, services: ServiceManager) {
-    //  let api = new Api();
-    const options = { app, services };
+export function addCommands(app: JupyterLab, services: ServiceManager, apiState: IApiState, api: ILegionApi) {
+    const options = { app, services, apiState, api };
 
-    Handlers.forEach(handler => handler.addCommands(options));
+    Handlers.forEach(handler => {
+        console.log('Processing handler ', handler);
+        handler.addCommands(options)
+    });
 }

@@ -9,28 +9,27 @@ import { CommandIDs, IAddCommandsOptions } from './base';
 export function addCommands(options: IAddCommandsOptions) {
     let { commands } = options.app;
 
-    commands.addCommand(CommandIDs.refresh, {
-        label: 'Force data refresh',
-        caption: 'Force data synchronization',
+    commands.addCommand(CommandIDs.refreshLocal, {
+        label: 'Force data refresh for local mode',
+        caption: 'Force data synchronization for local mode',
         execute: () => {
-            try {
-                throw new Error('Not implemented');
-            } catch (err) {
-                showErrorMessage('Can not forcefully update data', err);
-            }
+            options.api.local.getLocalAllEntities().then(response => {
+                options.apiState.updateEntireLocalState(response);
+                console.log('Data synchronization end');
+            }).catch(err => {
+                showErrorMessage('Can not forcefully update data for local mode', err);
+            });
+        }
+    });
+
+    commands.addCommand(CommandIDs.refreshCloud, {
+        label: 'Force data refresh for cloud mode',
+        caption: 'Force data synchronization for cloud mode',
+        execute: () => {
+            showErrorMessage('Not implemented yet', ':(');
         }
     });
 
 
-    commands.addCommand(CommandIDs.setRefreshInterval, {
-        label: 'Set refresh interval',
-        caption: 'Set custom refresh interval',
-        execute: () => {
-            try {
-                throw new Error('Not implemented');
-            } catch (err) {
-                showErrorMessage('Can not update refresh interval', err);
-            }
-        }
-    });
+
 }

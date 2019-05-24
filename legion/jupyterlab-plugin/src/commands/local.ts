@@ -27,8 +27,11 @@ export function addCommands(options: IAddCommandsOptions) {
         caption: 'Capture Legion model (local mode)',
         execute: () => {
             try {
-                // Start spinner
-                console.log('Local model capturing has been started');
+                options.api.local.startLocalBuild().then(() => {
+                    console.log('Image has been built');
+                }).catch(err => {
+                    showErrorMessage('Can not build model locally', err);
+                });
             } catch (err) {
                 showErrorMessage('Can not build model locally', err);
             }
@@ -60,7 +63,15 @@ export function addCommands(options: IAddCommandsOptions) {
                         buttons: [Dialog.cancelButton(), Dialog.okButton({ label: 'Remove', displayType: 'warn' })]
                     }).then(({button}) => {
                         if (button.accept){
-                            console.log('Local model undeploying has been started for', deploymentId);
+                            options.api.local.removeLocalDeployment({
+                                name: deploymentId
+                            }).then(() => {
+                                console.log('Local model deployment ' + deploymentId + ' has been removed, refreshing');
+                                commands.execute(CommandIDs.refreshLocal, {});
+                            }).catch(err => {
+                                showErrorMessage('Can not remove local deployment', err);
+                                commands.execute(CommandIDs.refreshLocal, {});
+                            })
                         }
                     })
                 }
