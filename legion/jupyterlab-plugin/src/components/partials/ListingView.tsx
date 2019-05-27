@@ -21,8 +21,14 @@ import * as style from '../../componentsStyle/ListingStyle';
 /** Interface for ListingView component state */
 export interface IListingViewNodeState { }
 
+export interface IFlexColumnParameters {
+  flexGrow: number;
+  flexBasis: number;
+}
+
 export interface IListingColumnInformation {
   name: string;
+  flex?: IFlexColumnParameters;
 }
 
 export interface IListingRowColumnValue {
@@ -56,7 +62,7 @@ export class ListingView extends React.Component<
     };
   }
 
-  getHeaderItemStyle(idx: number) {
+  getHeaderItemStyleClasses(idx: number): string {
     let finalStyles = style.listingHeaderItem + ' ';
     if (idx == 0) {
       finalStyles += style.listingFirstColumn;
@@ -66,6 +72,15 @@ export class ListingView extends React.Component<
     }
 
     return finalStyles;
+  }
+
+  getHeaderItemStyle(idx: number) {
+    const columnInformation = this.props.columns[idx];
+    return columnInformation.flex != undefined ? {
+      flexGrow: columnInformation.flex.flexGrow,
+      flexShrink: 0,
+      flexBasis: columnInformation.flex.flexBasis,
+    } : {};
   }
 
   getDataRowItemStyle(idx: number) {
@@ -83,7 +98,9 @@ export class ListingView extends React.Component<
       key={idx}
       className={style.listingRow}>
       {rowValue.items.map((column, colIdx) =>
-        <div key={colIdx} className={this.getDataRowItemStyle(colIdx)}>
+        <div key={colIdx}
+             className={this.getDataRowItemStyle(colIdx)}
+             style={this.getHeaderItemStyle(colIdx)}>
           {column.value}
         </div>
       )}
@@ -119,7 +136,12 @@ export class ListingView extends React.Component<
         </div>
         <div className={style.listingHeader}>
           {this.props.columns.map((columnInformation, idx) =>
-            <span key={idx} className={this.getHeaderItemStyle(idx)}>{columnInformation.name}</span>
+            <span
+              key={idx}
+              className={this.getHeaderItemStyleClasses(idx)}
+              style={this.getHeaderItemStyle(idx)} >
+              {columnInformation.name}
+            </span>
           )}
         </div>
         {this.renderDataBlock()}

@@ -66,12 +66,12 @@ class ModelDeployment(typing.NamedTuple):
             available_replicas=md_status.get('availableReplicas', 0),
         )
 
-    def to_json(self) -> typing.Dict[str, str]:
+    def to_json(self, with_status=False) -> typing.Dict[str, str]:
         """
         Convert a Model Deployment to raw json
         :return: raw dict
         """
-        return {
+        result = {
             'name': self.name,
             'spec': {
                 'image': self.image,
@@ -82,6 +82,13 @@ class ModelDeployment(typing.NamedTuple):
                 'readinessProbeInitialDelay': self.readiness_probeInitial_delay
             }
         }
+        if with_status:
+            result['status'] = {
+                'state': self.state,
+                'serviceURL': self.service_url,
+                'availableReplicas': self.available_replicas
+            }
+        return result
 
 
 class ModelDeploymentClient(RemoteEdiClient):

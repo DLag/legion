@@ -68,12 +68,13 @@ class ModelTraining(typing.NamedTuple):
             state=mt_status.get('state', '')
         )
 
-    def to_json(self) -> typing.Dict[str, str]:
+    def to_json(self, with_status=False) -> typing.Dict[str, str]:
         """
         Convert a Model Training to raw json
+        :param with_status: add status fields
         :return: raw dict
         """
-        return {
+        result = {
             'name': self.name,
             'spec': {
                 'toolchain': self.toolchain_type,
@@ -85,6 +86,13 @@ class ModelTraining(typing.NamedTuple):
                 'reference': self.reference
             }
         }
+        if with_status:
+            result['status'] = {
+                'id': self.model_id,
+                'version': self.model_version,
+                'state': self.state
+            }
+        return result
 
 
 class ModelTrainingClient(RemoteEdiClient):

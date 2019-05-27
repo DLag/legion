@@ -59,14 +59,18 @@ export function addCommands(options: IAddCommandsOptions) {
                     dialogs.showLoginDialog()
                         .then(({ button, value }) => {
                             if (button.accept) {
-                                options.api.cloud.getCloudDeployments(value).then(_ => {
+                                let splashScreen = options.splash.show();
+                                options.api.cloud.getCloudAllEntities(value).then(_ => {
+                                    splashScreen.dispose();
                                     options.apiState.setCredentials(value);
                                     showDialog({
                                         title: 'Legion Cluster mode',
                                         body: 'You have been successfully authorized on a cluster ' + value.cluster,
                                         buttons: [Dialog.okButton()]
                                     });
+                                    commands.execute(CommandIDs.refreshCloud);
                                 }).catch(err => {
+                                    splashScreen.dispose();
                                     showErrorMessage('Authorization on a cluster failed', err);
                                 })
                             }

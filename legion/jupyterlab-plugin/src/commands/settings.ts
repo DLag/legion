@@ -32,7 +32,6 @@ export function addCommands(options: IAddCommandsOptions) {
 
             options.api.local.getLocalAllEntities().then(response => {
                 options.apiState.updateEntireLocalState(response);
-                console.log('Data synchronization end');
             }).catch(err => {
                 options.apiState.updateEntireLocalState();
                 showErrorMessage('Can not forcefully update data for local mode', err);
@@ -56,7 +55,14 @@ export function addCommands(options: IAddCommandsOptions) {
         label: 'Force data refresh for cloud mode',
         caption: 'Force data synchronization for cloud mode',
         execute: () => {
-            showErrorMessage('Not implemented yet', ':(');
+            options.apiState.signalCloudLoadingStarted();
+
+            options.api.cloud.getCloudAllEntities(options.apiState.credentials).then(response => {
+                options.apiState.updateEntireCloudState(response);
+            }).catch(err => {
+                options.apiState.updateEntireCloudState();
+                showErrorMessage('Can not forcefully update data for cloud mode', err);
+            });
         }
     });
 

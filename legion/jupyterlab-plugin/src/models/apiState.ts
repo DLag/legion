@@ -31,7 +31,8 @@ export interface IApiLocalState {
 
 export interface IApiCloudState {
     trainings: Array<cloud.ICloudTrainingResponse>,
-    deployments: Array<cloud.ICloudDeploymentResponse>
+    deployments: Array<cloud.ICloudDeploymentResponse>,
+    vcss: Array<cloud.IVCSResponse>
 }
 
 export interface IApiState {
@@ -79,7 +80,8 @@ class APIStateImplementation implements IApiState {
 
         this._cloud = {
             trainings: [],
-            deployments: []
+            deployments: [],
+            vcss: []
         }
         this._cloudIsLoading = false;
 

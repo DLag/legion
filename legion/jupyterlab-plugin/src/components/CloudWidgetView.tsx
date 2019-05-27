@@ -23,6 +23,7 @@ import { ListingView } from './partials/ListingView';
 import { SmallButtonView, ButtonView } from './partials/ButtonView';
 
 import * as style from '../componentsStyle/GeneralWidgetStyle';
+import * as dialog from '../components/dialogs/cloud';
 import { CommandIDs } from '../commands';
 import { IApiState } from '../models';
 import { ICloudAllEntitiesResponse } from '../models/cloud';
@@ -96,38 +97,39 @@ export class CloudWidgetView extends React.Component<
               onClick={() => this.props.app.commands.execute(CommandIDs.openCloudModelPlugin)} />)}
           columns={[
             {
-              name: 'Training'
+              name: 'Training',
+              flex: {
+                flexGrow: 1,
+                flexBasis: 200
+              }
             },
             {
-              name: 'Status'
+              name: 'Status',
+              flex: {
+                flexGrow: 0,
+                flexBasis: 120
+              }
             }
           ]}
           isLoading={this.state.isLoading}
-          items={[
-            {
+          items={this.state.cloudData.trainings.map(training => {
+            return {
               items: [
                 {
-                  value: 'train-a'
+                  value: training.name
                 },
                 {
-                  value: 'IN PROGRESS'
+                  value: training.status.state
                 }
               ],
-              onClick: () => console.log('Click on row 1')
-            },
-            {
-              items: [
-                {
-                  value: 'train-b'
-                },
-                {
-                  value: 'FINISHED'
+              onClick: () => dialog.showCloudTrainInformationDialog(training)
+              .then(({ button }) => {
+                if (button.label == dialog.CREATE_DEPLOYMENT_LABEL) {
+                  //this.props.app.commands.execute(CommandIDs.newLocalDeployment, { image: build.imageName });
                 }
-              ],
-              onClick: () => console.log('Click on row 2')
+              })
             }
-
-          ]}
+          })}
         />
         <ListingView
           title={'Cloud deployments'}
@@ -138,33 +140,49 @@ export class CloudWidgetView extends React.Component<
               onClick={() => this.props.app.commands.execute(CommandIDs.openCloudModelPlugin)} />)}
           columns={[
             {
-              name: 'Deployment'
+              name: 'Deployment',
+              flex: {
+                flexGrow: 1,
+                flexBasis: 70
+              }
             },
             {
-              name: 'Model'
+              name: 'Replicas',
+              flex: {
+                flexGrow: 0,
+                flexBasis: 70
+              }
             },
             {
-              name: 'Image'
+              name: 'Image',
+              flex: {
+                flexGrow: 1,
+                flexBasis: 70
+              }
             }
           ]}
           isLoading={this.state.isLoading}
-          items={[
-            {
+          items={this.state.cloudData.deployments.map(deployment => {
+            return {
               items: [
                 {
-                  value: 'dep-a'
+                  value: deployment.name
                 },
                 {
-                  value: 'anomaly:0.1'
+                  value: '' + deployment.status.availableReplicas + '/' + deployment.spec.replicas
                 },
                 {
-                  value: 'legion-model-columns-model:1.0.190213141453.root.0000'
+                  value: deployment.spec.image
                 }
               ],
-              onClick: () => console.log('Click on row 1')
+              onClick: () => dialog.showCloudDeploymentInformationDialog(deployment)
+              .then(({ button }) => {
+                if (button.label == dialog.REMOVE_DEPLOYMENT_LABEL) {
+                  //this.props.app.commands.execute(CommandIDs.newLocalDeployment, { image: build.imageName });
+                }
+              })
             }
-
-          ]}
+          })}
         />
       </div>
     );

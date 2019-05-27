@@ -19,6 +19,7 @@ from tornado.web import HTTPError
 
 from legion.sdk.clients.training import ModelTrainingClient, ModelTraining
 from legion.sdk.clients.deployment import ModelDeploymentClient, ModelDeployment
+from legion.sdk.clients.vcs import VcsClient, VCSCredential
 
 from .base import BaseLegionHandler
 
@@ -43,7 +44,7 @@ class BaseCloudLegionHandler(BaseLegionHandler):
         :param training: cloud training information object
         :return: dict
         """
-        return training.to_json()
+        return training.to_json(True)
 
     @staticmethod
     def transform_cloud_deployment(deployment: ModelDeployment) -> dict:
@@ -53,7 +54,17 @@ class BaseCloudLegionHandler(BaseLegionHandler):
         :param deployment: deployment object
         :return: dict
         """
-        return deployment.to_json()
+        return deployment.to_json(True)
+
+    @staticmethod
+    def transform_vcs(vcs: VCSCredential) -> dict:
+        """
+        Transform VCS object to dict
+        :type vcs: VCSCredential
+        :param vcs: VCS object
+        :return: dict
+        """
+        return vcs.to_json()
 
     def build_cloud_client(self, target_client_class):
         edi_url = self.request.headers.get(LEGION_CLOUD_CREDENTIALS_EDI, '')
@@ -86,12 +97,23 @@ class BaseCloudLegionHandler(BaseLegionHandler):
             for deployment in client.get_all()
         ]
 
+    def get_vcs_instances(self) -> typing.List[dict]:
+        """
+        Get VCS instances
+        :return: typing.List[dict] -- list of VCSs
+        """
+        client = self.build_cloud_client(VcsClient)
+        return [
+            self.transform_vcs(vcs)
+            for vcs in client.get_all()
+        ]
+
 
 class CloudTrainingsHandler(BaseCloudLegionHandler):
     """
     This handler controls cloud trainings
     """
-    def get(self):
+    def post(self):
         try:
             self.finish_with_json(self.get_cloud_trainings())
         except Exception as query_exception:
@@ -103,7 +125,7 @@ class CloudDeploymentsHandler(BaseCloudLegionHandler):
     This handler controls cloud deployments
     """
 
-    def get(self):
+    def post(self):
         """
         Get information about cloud deployments
         :return: None
@@ -141,5 +163,6 @@ class CloudAllEntitiesHandler(BaseCloudLegionHandler):
     def get(self):
         self.finish_with_json({
             'trainings': self.get_cloud_trainings(),
-            'deployments': self.get_cloud_deployments()
+            'deployments': self.get_cloud_deployments(),
+            'vcss': self.get_vcs_instances()
         })

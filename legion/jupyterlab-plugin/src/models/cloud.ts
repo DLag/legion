@@ -18,8 +18,28 @@ export interface ICloudTrainingRequest {
 
 }
 
-export interface ICloudTrainingResponse {
 
+export interface ICloudTrainingResponseSpec {
+    toolchain: string;
+    resources: string;
+    entrypoint: string;
+    args: Array<string>;
+    vcsName: string;
+    workDir: string;
+    reference: string;
+}
+
+
+export interface ICloudTrainingResponseStatus {
+    id: string;
+    version: string;
+    state: string;
+}
+
+export interface ICloudTrainingResponse {
+    name: string;
+    spec: ICloudTrainingResponseSpec;
+    status: ICloudTrainingResponseStatus;
 }
 
 export interface ICloudDeploymentCreateRequest {
@@ -30,8 +50,38 @@ export interface ICloudDeploymentRemoveRequest {
 
 }
 
-export interface ICloudDeploymentResponse {
+export interface ICloudDeploymentResponseSpec {
+    image: string
+    resources: string;
+    annotations: Array<string>;
+    replicas: number;
+    livenessProbeInitialDelay: number;
+    readinessProbeInitialDelay: number;
+}
 
+export interface ICloudDeploymentResponseStatus {
+    state: string;
+    serviceURL: string;
+    availableReplicas: number;
+}
+
+export interface ICloudDeploymentResponse {
+    name: string;
+    spec: ICloudDeploymentResponseSpec;
+    status: ICloudDeploymentResponseStatus;
+}
+
+export interface IVCSResponseSpec {
+    type: string;
+    uri: string;
+    defaultReference: string;
+    credential: string;
+    publicKey: string;
+}
+
+export interface IVCSResponse {
+    name: string;
+    spec: IVCSResponseSpec;
 }
 
 /**
@@ -39,5 +89,6 @@ export interface ICloudDeploymentResponse {
  */
 export interface ICloudAllEntitiesResponse {
     trainings: Array<ICloudTrainingResponse>,
-    deployments: Array<ICloudDeploymentResponse>
+    deployments: Array<ICloudDeploymentResponse>,
+    vcss: Array<IVCSResponse>
 }
