@@ -47,3 +47,8 @@ export const branchStyle = style({
     textAlign: 'center',
     overflowY: 'auto'
 });
+
+export const buttonDisabled = style({
+    cursor: 'wait',
+    opacity: 0.4
+});

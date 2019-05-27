@@ -23,6 +23,7 @@ export interface IButtonViewNodeState { }
 export interface IButtonViewNodeProps {
   text: string;
   onClick: () => void;
+  disabled?: boolean;
 }
 export interface IButtonViewWithIconNodeProps extends IButtonViewNodeProps {
   iconClass: string;
@@ -33,16 +34,25 @@ export interface IButtonViewWithStyleNodeProps extends IButtonViewNodeProps {
 }
 
 export class ButtonView extends React.Component<
-IButtonViewWithStyleNodeProps,
+  IButtonViewWithStyleNodeProps,
   IButtonViewNodeState
   > {
   constructor(props: IButtonViewWithStyleNodeProps) {
     super(props);
   }
 
+  getStyle() {
+    let finalStyle = "jp-Dialog-button " + this.props.style + " jp-mod-styled " + style.normalButtonStyle;
+    if (this.props.disabled) {
+      finalStyle += ' ' + style.buttonDisabled;
+    }
+    return finalStyle;
+  }
+
   render() {
     return (
-      <button className={"jp-Dialog-button " + this.props.style + " jp-mod-styled " + style.normalButtonStyle} onClick={e => this.props.onClick()}>
+      <button className={this.getStyle()}
+        onClick={e => this.props.disabled ? null : this.props.onClick()}>
         <div className={"jp-Dialog-buttonIcon"}></div>
         <div className={"jp-Dialog-buttonLabel"}>{this.props.text}</div>
       </button>
@@ -58,10 +68,18 @@ export class SmallButtonView extends React.Component<
     super(props);
   }
 
+  getStyle() {
+    let finalStyle = style.smallButtonStyle;
+    if (this.props.disabled) {
+      finalStyle += ' ' + style.buttonDisabled;
+    }
+    return finalStyle;
+  }
+
   render() {
     return (
-      <button className={style.smallButtonStyle}
-        onClick={e => this.props.onClick()}
+      <button className={this.getStyle()}
+        onClick={e => this.props.disabled ? null : this.props.onClick()}
         title={this.props.text}>
         <span className={'' + this.props.iconClass + ' jp-Icon jp-Icon-16 ' + style.smallButtonStyleImage}></span>
       </button>

@@ -28,11 +28,26 @@ export function addCommands(options: IAddCommandsOptions) {
         label: 'Force data refresh for local mode',
         caption: 'Force data synchronization for local mode',
         execute: () => {
+            options.apiState.signalLocalLoadingStarted();
+
             options.api.local.getLocalAllEntities().then(response => {
                 options.apiState.updateEntireLocalState(response);
                 console.log('Data synchronization end');
             }).catch(err => {
+                options.apiState.updateEntireLocalState();
                 showErrorMessage('Can not forcefully update data for local mode', err);
+            });
+        }
+    });
+
+    commands.addCommand(CommandIDs.refreshLocalBuildStatus, {
+        label: 'Force build status refresh for local mode',
+        caption: 'Force data synchronization for local mode build status',
+        execute: () => {
+            options.api.local.getLocalBuildStatus().then(response => {
+                options.apiState.updateLocalBuildState(response);
+            }).catch(err => {
+                console.warn('Can not get status of build', err);
             });
         }
     });

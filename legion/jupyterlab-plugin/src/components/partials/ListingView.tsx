@@ -19,7 +19,7 @@ import * as style from '../../componentsStyle/ListingStyle';
 
 
 /** Interface for ListingView component state */
-export interface IListingViewNodeState {}
+export interface IListingViewNodeState { }
 
 export interface IListingColumnInformation {
   name: string;
@@ -41,12 +41,14 @@ export interface IListingViewNodeProps {
 
   columns: Array<IListingColumnInformation>;
   items: Array<IListingRowValue>;
+
+  isLoading: boolean;
 }
 
 export class ListingView extends React.Component<
   IListingViewNodeProps,
   IListingViewNodeState
-> {
+  > {
   constructor(props: IListingViewNodeProps) {
     super(props);
     this.state = {
@@ -54,9 +56,9 @@ export class ListingView extends React.Component<
     };
   }
 
-  getHeaderItemStyle(idx: number){
+  getHeaderItemStyle(idx: number) {
     let finalStyles = style.listingHeaderItem + ' ';
-    if (idx == 0){
+    if (idx == 0) {
       finalStyles += style.listingFirstColumn;
     }
     else {
@@ -66,12 +68,12 @@ export class ListingView extends React.Component<
     return finalStyles;
   }
 
-  getDataRowItemStyle(idx: number){
+  getDataRowItemStyle(idx: number) {
     return style.listingRowItem + ' ' + (idx == 0 ? style.listingFirstColumn : style.listingAdditionalColumn);
   }
 
-  renderRow(rowValue: IListingRowValue, idx: number){
-    if (rowValue.items.length != this.props.columns.length){
+  renderRow(rowValue: IListingRowValue, idx: number) {
+    if (rowValue.items.length != this.props.columns.length) {
       console.log('Row contains ' + rowValue.items.length + ' value(s), but header contains ' + this.props.columns.length + 'value(s)');
       return null;
     }
@@ -88,6 +90,26 @@ export class ListingView extends React.Component<
     </div>
   }
 
+  renderDataBlock() {
+    if (this.props.isLoading) {
+      return (
+        <p className={style.listingDataLine}>Loading...</p>
+      )
+    }
+
+    if (this.props.items.length == 0) {
+      return (
+        <p className={style.listingDataLine}>No data</p>
+      )
+    }
+
+    return (
+      <div className={style.listingData}>
+        {this.props.items.map((row, idx) => this.renderRow(row, idx))}
+      </div>
+    )
+  }
+
   render() {
     return (
       <div className={style.listingHolder}>
@@ -100,9 +122,7 @@ export class ListingView extends React.Component<
             <span key={idx} className={this.getHeaderItemStyle(idx)}>{columnInformation.name}</span>
           )}
         </div>
-        <div className={style.listingData}>
-          {this.props.items.map((row, idx) => this.renderRow(row, idx))}
-        </div>
+        {this.renderDataBlock()}
       </div>
     );
   }

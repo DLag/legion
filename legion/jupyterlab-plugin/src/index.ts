@@ -18,8 +18,8 @@ import {
   JupyterLab,
   JupyterLabPlugin
 } from '@jupyterlab/application';
-import { ICommandPalette } from "@jupyterlab/apputils";
-import { ISettingRegistry } from "@jupyterlab/coreutils";
+import { ICommandPalette, ISplashScreen } from "@jupyterlab/apputils";
+import { ISettingRegistry, IStateDB } from "@jupyterlab/coreutils";
 import { IMainMenu } from '@jupyterlab/mainmenu';
 
 import { Menu } from '@phosphor/widgets';
@@ -60,7 +60,9 @@ const plugin: JupyterLabPlugin<ILegionExtension> = {
     IMainMenu,
     ILayoutRestorer,
     ICommandPalette,
-    ISettingRegistry
+    ISettingRegistry,
+    ISplashScreen,
+    IStateDB
   ],
   provides: ILegionExtension,
   activate,
@@ -96,6 +98,8 @@ export class LegionExtension implements ILegionExtension {
    */
   apiState: IApiState;
 
+  localBuildStatusTimer: number;
+
   /**
    * Construct extension
    * @param app JupyterLab target JupyterLab
@@ -103,11 +107,12 @@ export class LegionExtension implements ILegionExtension {
    */
   constructor(
     app: JupyterLab,
-    restorer: ILayoutRestorer
+    restorer: ILayoutRestorer,
+    state: IStateDB
   ) {
     //this.app = app;
     this.api = new LegionApi();
-    this.apiState = buildInitialAPIState();
+    this.apiState = buildInitialAPIState(state);
 
     if (true) {
       this.localTabWidget = createLocalSidebarWidget(
@@ -122,6 +127,10 @@ export class LegionExtension implements ILegionExtension {
 
       restorer.add(this.localTabWidget, 'legion-local-sessions');
       app.shell.addToLeftArea(this.localTabWidget, { rank: 200 });
+
+      app.restored.then(() => {
+        this.localBuildStatusTimer = setInterval(() => app.commands.execute(CommandIDs.refreshLocalBuildStatus), 1000);
+      });
     }
 
 
@@ -138,6 +147,10 @@ export class LegionExtension implements ILegionExtension {
 
       restorer.add(this.cloudTabWidget, 'legion-cloud-sessions');
       app.shell.addToLeftArea(this.cloudTabWidget, { rank: 210 });
+
+      app.restored.then(() => {
+        this.apiState.tryToLoadCredentialsFromSettings();
+      });
     }
 
 
@@ -161,27 +174,27 @@ function buildTopMenuItems(commands: CommandRegistry): Menu {
   menu.addItem({ type: 'submenu', submenu: local });
 
   [CommandIDs.openLocalModelPlugin, CommandIDs.openCloudModelPlugin, CommandIDs.openLocalMetrics].forEach(
-      command => {
-          menu.addItem({ command });
-      }
+    command => {
+      menu.addItem({ command });
+    }
   );
 
   [CommandIDs.refreshCloud, CommandIDs.authorizeOnCluster, CommandIDs.unAuthorizeOnCluster].forEach(
-      command => {
-          cloud.addItem({ command });
-      }
+    command => {
+      cloud.addItem({ command });
+    }
   );
 
   [CommandIDs.mainRepository].forEach(
-      command => {
-          help.addItem({ command });
-      }
+    command => {
+      help.addItem({ command });
+    }
   );
 
-  [CommandIDs.refreshLocal].forEach(
-      command => {
-        local.addItem({ command });
-      }
+  [CommandIDs.refreshLocal, CommandIDs.newLocalBuild, CommandIDs.refreshLocalBuildStatus, CommandIDs.openLocalMetrics].forEach(
+    command => {
+      local.addItem({ command });
+    }
   );
 
   return menu;
@@ -195,13 +208,15 @@ function activate(
   mainMenu: IMainMenu,
   restorer: ILayoutRestorer,
   palette: ICommandPalette,
-  settings: ISettingRegistry
+  settings: ISettingRegistry,
+  splash: ISplashScreen,
+  state: IStateDB
 ): ILegionExtension {
   // Build extension
-  let legionExtension = new LegionExtension(app, restorer);
+  let legionExtension = new LegionExtension(app, restorer, state);
   // Register commands in application (in top menu & palette)
 
-  addCommands(app, app.serviceManager, legionExtension.apiState, legionExtension.api);
+  addCommands(app, app.serviceManager, legionExtension.apiState, legionExtension.api, splash);
 
   for (let command in CommandIDs) {
     palette.addItem({

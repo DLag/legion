@@ -15,6 +15,7 @@
  */
 import { JupyterLab } from '@jupyterlab/application';
 import { ServiceManager } from '@jupyterlab/services';
+import { ISplashScreen } from "@jupyterlab/apputils";
 
 import * as authorize from './authorize';
 import * as local from './local';
@@ -33,8 +34,8 @@ import { ILegionApi } from '../api';
 /**
  * Add the commands for the legion extension.
  */
-export function addCommands(app: JupyterLab, services: ServiceManager, apiState: IApiState, api: ILegionApi) {
-    const options = { app, services, apiState, api };
+export function addCommands(app: JupyterLab, services: ServiceManager, apiState: IApiState, api: ILegionApi, splash: ISplashScreen) {
+    const options = { app, services, apiState, api, splash };
 
     Handlers.forEach(handler => {
         console.log('Processing handler ', handler);

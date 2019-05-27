@@ -14,10 +14,14 @@
  *   limitations under the License.
  */
 import { ISignal, Signal } from '@phosphor/signaling';
+import { IStateDB } from "@jupyterlab/coreutils";
 
 import { ICloudCredentials } from '../api/base';
 import * as local from './local';
 import * as cloud from './cloud';
+
+export const PLUGIN_CREDENTIALS_STORE_CLUSTER = `legion.cluster:credentials-cluster`;
+export const PLUGIN_CREDENTIALS_STORE_TOKEN = `legion.cluster:credentials-token`;
 
 export interface IApiLocalState {
     builds: Array<local.ILocalBuildInformation>,
@@ -32,27 +36,37 @@ export interface IApiCloudState {
 
 export interface IApiState {
     local: IApiLocalState;
-    updateEntireLocalState(data: local.ILocalAllEntitiesResponse): void;
+    localIsLoading: boolean;
+    signalLocalLoadingStarted(): void;
+    updateEntireLocalState(data?: local.ILocalAllEntitiesResponse): void;
+    updateLocalBuildState(data: local.ILocalBuildStatus): void;
     onLocalDataChanged: ISignal<this, void>;
 
-    cloud: cloud.ICloudDeploymentResponse;
-    updateEntireCloudState(data: cloud.ICloudAllEntitiesResponse): void;
+    cloud: IApiCloudState;
+    cloudIsLoading: boolean;
+    signalCloudLoadingStarted(): void;
+    updateEntireCloudState(data?: cloud.ICloudAllEntitiesResponse): void;
     onCloudDataChanged: ISignal<this, void>;
 
     credentials: ICloudCredentials;
-    setCredentials(credentials?: ICloudCredentials): void;
+    setCredentials(credentials?: ICloudCredentials, skipPersisting?: boolean): void;
+    tryToLoadCredentialsFromSettings(): void;
 };
 
 class APIStateImplementation implements IApiState {
     private _local: IApiLocalState;
+    private _localIsLoading: boolean;
     private _localDataChanged = new Signal<this, void>(this);
 
     private _cloud: IApiCloudState;
+    private _cloudIsLoading: boolean;
     private _cloudDataChanged = new Signal<this, void>(this);
 
     private _credentials?: ICloudCredentials;
 
-    constructor() {
+    private _appState: IStateDB;
+
+    constructor(appState: IStateDB) {
         this._local = {
             builds: [],
             deployments: [],
@@ -61,17 +75,24 @@ class APIStateImplementation implements IApiState {
                 finished: false
             }
         };
+        this._localIsLoading = false;
 
         this._cloud = {
             trainings: [],
             deployments: []
         }
+        this._cloudIsLoading = false;
 
         this._credentials = null;
+        this._appState = appState;
     }
 
     get local(): IApiLocalState {
         return this._local;
+    }
+
+    get localIsLoading(): boolean {
+        return this._localIsLoading;
     }
 
     get onLocalDataChanged(): ISignal<this, void> {
@@ -82,17 +103,45 @@ class APIStateImplementation implements IApiState {
         return this._cloud;
     }
 
+    get cloudIsLoading(): boolean {
+        return this._cloudIsLoading;
+    }
+
     get onCloudDataChanged(): ISignal<this, void> {
         return this._cloudDataChanged;
     }
 
-    updateEntireLocalState(data: local.ILocalAllEntitiesResponse): void {
-        this._local = data;
+    signalLocalLoadingStarted(): void {
+        this._localIsLoading = true;
         this._localDataChanged.emit(null);
     }
 
-    updateEntireCloudState(data: cloud.ICloudAllEntitiesResponse): void {
-        this._cloud = data;
+    updateEntireLocalState(data?: local.ILocalAllEntitiesResponse): void {
+        if (data) {
+            this._local = data;
+        }
+        this._localIsLoading = false;
+        this._localDataChanged.emit(null);
+    }
+
+    updateLocalBuildState(data: local.ILocalBuildStatus): void {
+        this._local = {
+            ...this._local,
+            buildStatus: data
+        };
+        this._localDataChanged.emit(null);
+    }
+
+    signalCloudLoadingStarted(): void {
+        this._cloudIsLoading = true;
+        this._cloudDataChanged.emit(null);
+    }
+
+    updateEntireCloudState(data?: cloud.ICloudAllEntitiesResponse): void {
+        if (data) {
+            this._cloud = data;
+        }
+        this._cloudIsLoading = false;
         this._cloudDataChanged.emit(null);
     }
 
@@ -100,11 +149,59 @@ class APIStateImplementation implements IApiState {
         return this._credentials;
     }
 
-    setCredentials(credentials?: ICloudCredentials): void {
-        this._credentials = credentials;
+    setCredentials(credentials?: ICloudCredentials, skipPersisting?: boolean): void {
+        if (credentials != undefined) {
+            console.log('Updating credentials for ', credentials.cluster);
+            this._credentials = credentials;
+        } else {
+            console.log('Resetting credentials');
+            this._credentials = null;
+        }
+
+        if (skipPersisting !== true) {
+            if (this._credentials) {
+                Promise.all([
+                    this._appState.save(PLUGIN_CREDENTIALS_STORE_CLUSTER, this._credentials.cluster),
+                    this._appState.save(PLUGIN_CREDENTIALS_STORE_TOKEN, this._credentials.authString),
+                ]).then(() => {
+                    console.log('Cluster and token have been persisted in settings');
+                }).catch(err => {
+                    console.error('Can not persist cluster and token in settings', err);
+                });
+            } else {
+                Promise.all([
+                    this._appState.remove(PLUGIN_CREDENTIALS_STORE_CLUSTER),
+                    this._appState.remove(PLUGIN_CREDENTIALS_STORE_TOKEN)
+                ]).then(() => {
+                    console.log('Cluster and token have been removed from storage');
+                }).catch(err => {
+                    console.error('Can not remove cluster and token from storage', err);
+                });
+            }
+        }
+        this._cloudDataChanged.emit(null);
+    }
+
+    tryToLoadCredentialsFromSettings(): void {
+        Promise.all([
+            this._appState.fetch(PLUGIN_CREDENTIALS_STORE_CLUSTER),
+            this._appState.fetch(PLUGIN_CREDENTIALS_STORE_TOKEN),
+        ]).then((answers) => {
+            if (!answers[0]) {
+                console.warn('Empty data loaded from credentials store');
+            } else {
+                let credentials = {
+                    cluster: answers[0] as string,
+                    authString: answers[1] as string
+                };
+                this.setCredentials(credentials, true);
+            }
+        }).catch(err => {
+            console.error('Can not load credentials from store', err);
+        });
     }
 }
 
-export function buildInitialAPIState(): IApiState {
-    return new APIStateImplementation();
+export function buildInitialAPIState(appState: IStateDB): IApiState {
+    return new APIStateImplementation(appState);
 }

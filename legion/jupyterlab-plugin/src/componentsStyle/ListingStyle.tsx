@@ -100,3 +100,15 @@ export const listingAdditionalColumn = style({
     textAlign: 'center',
     wordWrap: 'normal'
 });
+
+export const listingDataLine = style({
+    display: 'block',
+    color: 'var(--jp-ui-font-color1)',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    fontSize: 'var(--jp-ui-font-size0)',
+    padding: '8px 8px 8px 12px',
+    margin: '0px',
+    textAlign: 'center'
+});

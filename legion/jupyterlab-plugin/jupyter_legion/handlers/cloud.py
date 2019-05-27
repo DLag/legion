@@ -13,7 +13,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
-import json
 import typing
 
 from tornado.web import HTTPError
@@ -94,7 +93,7 @@ class CloudTrainingsHandler(BaseCloudLegionHandler):
     """
     def get(self):
         try:
-            self.finish(json.dumps(self.get_cloud_trainings()))
+            self.finish_with_json(self.get_cloud_trainings())
         except Exception as query_exception:
             raise HTTPError(log_message='Can not query cloud trainings') from query_exception
 
@@ -110,7 +109,7 @@ class CloudDeploymentsHandler(BaseCloudLegionHandler):
         :return: None
         """
         try:
-            self.finish(json.dumps(self.get_cloud_deployments()))
+            self.finish_with_json(self.get_cloud_deployments())
         except Exception as query_exception:
             raise HTTPError(log_message='Can not query cloud deployments') from query_exception
 
@@ -131,7 +130,7 @@ class CloudDeploymentsHandler(BaseCloudLegionHandler):
         except Exception as query_exception:
             raise HTTPError(log_message='Can not remove cluster model deployment') from query_exception
 
-        self.finish(json.dumps({}))
+        self.finish_with_json()
 
 
 
@@ -140,7 +139,7 @@ class CloudAllEntitiesHandler(BaseCloudLegionHandler):
     This handler return all information for cloud mode
     """
     def get(self):
-        self.finish(json.dumps({
+        self.finish_with_json({
             'trainings': self.get_cloud_trainings(),
             'deployments': self.get_cloud_deployments()
-        }))
+        })

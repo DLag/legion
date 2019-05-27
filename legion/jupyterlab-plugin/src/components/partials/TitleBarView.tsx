@@ -46,7 +46,7 @@ export class TitleBarView extends React.Component<
         <SmallButtonView
           text={'Refresh'}
           iconClass={'jp-RefreshIcon'}
-          onClick={this.props.onRefresh.bind(this)} />
+          onClick={this.props.onRefresh ? this.props.onRefresh.bind(this) : null} />
       </div>
     );
   }

@@ -15,6 +15,7 @@
  */
 import { JupyterLab } from '@jupyterlab/application';
 import { ServiceManager } from '@jupyterlab/services';
+import { ISplashScreen } from "@jupyterlab/apputils";
 
 import { IApiState } from '../models';
 import { ILegionApi } from '../api';
@@ -42,6 +43,7 @@ export namespace CommandIDs {
 
     // Settings
     export const refreshLocal = 'legion:refresh-local-mode';
+    export const refreshLocalBuildStatus = 'legion:refresh-local-mode-build-status';
     export const refreshCloud = 'legion:refresh-cloud-mode';
 
     export const palleteCommands = [
@@ -49,6 +51,7 @@ export namespace CommandIDs {
         openLocalModelPlugin,
         mainRepository,
         refreshLocal,
+        refreshLocalBuildStatus,
         refreshCloud,
         unAuthorizeOnCluster,
         openLocalMetrics
@@ -60,4 +63,5 @@ export interface IAddCommandsOptions {
     services: ServiceManager;
     api: ILegionApi;
     apiState: IApiState;
+    splash: ISplashScreen;
 }

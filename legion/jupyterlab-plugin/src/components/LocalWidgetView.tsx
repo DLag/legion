@@ -16,7 +16,7 @@
 import * as React from 'react';
 
 import { JupyterLab } from '@jupyterlab/application';
-import { showErrorMessage } from '@jupyterlab/apputils';
+import { showErrorMessage, Dialog, showDialog } from '@jupyterlab/apputils';
 
 import { TitleBarView } from './partials/TitleBarView';
 import { ListingView } from './partials/ListingView';
@@ -32,6 +32,8 @@ import { ILocalAllEntitiesResponse } from '../models/local';
 /** Interface for GitPanel component state */
 export interface ILocalWidgetViewNodeState {
   localData: ILocalAllEntitiesResponse;
+  isLoading: boolean;
+  buildingInProcess: boolean;
 }
 
 /** Interface for GitPanel component props */
@@ -45,29 +47,52 @@ export class LocalWidgetView extends React.Component<
   ILocalWidgetViewNodeProps,
   ILocalWidgetViewNodeState
   > {
+
+  private buildingInProcessDialog: any;
+
   constructor(props: ILocalWidgetViewNodeProps) {
     super(props);
     this.state = {
-      localData: props.dataState.local
+      localData: props.dataState.local,
+      buildingInProcess: props.dataState.local.buildStatus.started && !props.dataState.local.buildStatus.finished,
+      isLoading: false
     };
   }
 
   refresh = async () => {
     try {
       this.setState({
-        localData: this.props.dataState.local
+        localData: this.props.dataState.local,
+        buildingInProcess: this.props.dataState.local.buildStatus.started && !this.props.dataState.local.buildStatus.finished,
+        isLoading: this.props.dataState.localIsLoading
       });
     } catch (err) {
       showErrorMessage('Can not update local widget', err);
     }
   };
 
-  emitNewBuild() {
-    showErrorMessage('Can not start new build', 'Not implemented');
+  componentWillUpdate(_: ILocalWidgetViewNodeProps, newState: ILocalWidgetViewNodeState) {
+    if (newState.buildingInProcess != this.state.buildingInProcess) {
+      if (newState.buildingInProcess) {
+        this.buildingInProcessDialog = new Dialog({
+          title: 'Local build',
+          body: 'Local build is in process...',
+          buttons: []
+        });
+        this.buildingInProcessDialog.launch();
+      }
+      else if (this.buildingInProcessDialog) {
+        this.buildingInProcessDialog.dispose();
+        showDialog({
+          title: 'Local build',
+          body: 'Local build has been finished',
+          buttons: [Dialog.okButton()]
+        });
+      }
+    }
   }
 
   render() {
-    console.log('State', this.state.localData);
     return (
       <div className={style.widgetPane}>
         <TitleBarView text={'Legion local mode'} onRefresh={() => this.props.app.commands.execute(CommandIDs.refreshLocal)} />
@@ -75,9 +100,10 @@ export class LocalWidgetView extends React.Component<
           title={'Builds'}
           topButton={(
             <SmallButtonView
-              text={'New build'}
+              text={this.state.buildingInProcess ? 'Build in process...' : 'New build'}
               iconClass={'jp-AddIcon'}
-              onClick={this.emitNewBuild.bind(this)} />)}
+              disabled={this.state.buildingInProcess}
+              onClick={() => this.props.app.commands.execute(CommandIDs.newLocalBuild)} />)}
           columns={[
             {
               name: 'Docker image'
@@ -86,6 +112,7 @@ export class LocalWidgetView extends React.Component<
               name: 'Model'
             }
           ]}
+          isLoading={this.state.isLoading}
           items={this.state.localData.builds.map(build => {
             return {
               items: [
@@ -123,6 +150,7 @@ export class LocalWidgetView extends React.Component<
               name: 'Image'
             }
           ]}
+          isLoading={this.state.isLoading}
           items={this.state.localData.deployments.map(deployment => {
             return {
               items: [

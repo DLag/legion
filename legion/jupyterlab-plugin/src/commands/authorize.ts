@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import { showErrorMessage } from '@jupyterlab/apputils';
+import { showErrorMessage, showDialog, Dialog } from '@jupyterlab/apputils';
 
 import { CommandIDs, IAddCommandsOptions } from './base';
 import * as dialogs from '../components/dialogs';
@@ -31,12 +31,16 @@ export function addCommands(options: IAddCommandsOptions) {
         caption: 'Reset currently used cluster context',
         execute: () => {
             try {
-                dialogs.showLogoutDialog('TestClusterName')
-                .then(({ button }) => {
-                    if (button.accept){
-                        console.log('Resetting auth');
-                    }
-                });
+                if (!options.apiState.credentials) {
+                    showErrorMessage('Can not reset cluster authorization', 'You are not authorized on any cluster');
+                } else {
+                    dialogs.showLogoutDialog(options.apiState.credentials.cluster)
+                        .then(({ button }) => {
+                            if (button.accept) {
+                                options.apiState.setCredentials();
+                            }
+                        });
+                }
             } catch (err) {
                 showErrorMessage('Can not reset cluster authorization', err);
             }
@@ -49,16 +53,25 @@ export function addCommands(options: IAddCommandsOptions) {
         caption: 'Authorize on Legion cluster',
         execute: () => {
             try {
-                dialogs.showLoginDialog()
-                .then(({ button, value }) => {
-                    if (button.accept){
-                        options.api.cloud.getCloudDeployments(value).then(_ => {
-                            showErrorMessage('Authorized', 'You have been successfully authorized');
-                        }).catch(err => {
-                            showErrorMessage('Authorization on a cluster failed', err);
-                        })
-                    }
-                });
+                if (!!options.apiState.credentials) {
+                    showErrorMessage('Can not authorize on a cluster', 'You are already authorized');
+                } else {
+                    dialogs.showLoginDialog()
+                        .then(({ button, value }) => {
+                            if (button.accept) {
+                                options.api.cloud.getCloudDeployments(value).then(_ => {
+                                    options.apiState.setCredentials(value);
+                                    showDialog({
+                                        title: 'Legion Cluster mode',
+                                        body: 'You have been successfully authorized on a cluster ' + value.cluster,
+                                        buttons: [Dialog.okButton()]
+                                    });
+                                }).catch(err => {
+                                    showErrorMessage('Authorization on a cluster failed', err);
+                                })
+                            }
+                        });
+                }
             } catch (err) {
                 showErrorMessage('Can not authorize on a cluster', err);
             }

@@ -13,7 +13,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
-import json
 import typing
 import multiprocessing
 import time
@@ -140,7 +139,7 @@ class LocalBuildsHandler(BaseLocalLegionHandler):
     """
     def get(self):
         try:
-            self.finish(json.dumps(self.get_local_builds()))
+            self.finish_with_json(self.get_local_builds())
         except Exception as query_exception:
             raise HTTPError(log_message='Can not query local builds') from query_exception
 
@@ -152,6 +151,7 @@ class LocalBuildsHandler(BaseLocalLegionHandler):
             raise HTTPError(log_message='JupyterLab is run out of container (container ID is unavailable)')
 
         self.start_build()
+        self.finish_with_json()
 
 
 
@@ -166,7 +166,7 @@ class LocalDeploymentsHandler(BaseLocalLegionHandler):
         :return:
         """
         try:
-            self.finish(json.dumps(self.get_local_deployments()))
+            self.finish_with_json(self.get_local_deployments())
         except Exception as query_exception:
             raise HTTPError(log_message='Can not query local deployments') from query_exception
 
@@ -189,7 +189,7 @@ class LocalDeploymentsHandler(BaseLocalLegionHandler):
             raise HTTPError(log_message='Can not deploy model locally') from query_exception
 
         if deployments:
-            return self.finish(json.dumps(self.transform_local_deployment(deployments[0])))
+            return self.finish_with_json(self.transform_local_deployment(deployments[0]))
         else:
             raise HTTPError(log_message='Back-end did not return information about created deployment')
 
@@ -209,7 +209,7 @@ class LocalDeploymentsHandler(BaseLocalLegionHandler):
         except Exception as query_exception:
             raise HTTPError(log_message='Can not remove local model deployment') from query_exception
 
-        self.finish(json.dumps({}))
+        self.finish_with_json()
 
 
 class LocalBuildStatusHandler(BaseLocalLegionHandler):
@@ -222,7 +222,7 @@ class LocalBuildStatusHandler(BaseLocalLegionHandler):
         Get information about local build status
         :return:
         """
-        self.finish(json.dumps(self.get_build_status()))
+        self.finish_with_json(self.get_build_status())
 
 
 class LocalAllEntitiesHandler(BaseLocalLegionHandler):
@@ -230,8 +230,8 @@ class LocalAllEntitiesHandler(BaseLocalLegionHandler):
     This handler return all information for local mode
     """
     def get(self):
-        self.finish(json.dumps({
+        self.finish_with_json({
             'builds': self.get_local_builds(),
             'deployments': self.get_local_deployments(),
             'buildStatus': self.get_build_status()
-        }))
+        })
