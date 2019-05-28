@@ -128,7 +128,7 @@ export class CloudWidgetView extends React.Component<
               .then(({ button }) => {
                 if (button.label == dialog.CREATE_DEPLOYMENT_LABEL) {
                   this.props.app.commands.execute(CommandIDs.newCloudDeployment, {
-                    image: training.spec.entrypoint
+                    image: training.status.modelImage
                   });
                 }
               })
@@ -141,7 +141,7 @@ export class CloudWidgetView extends React.Component<
             <SmallButtonView
               text={'New deployment'}
               iconClass={'jp-AddIcon'}
-              onClick={() => this.props.app.commands.execute(CommandIDs.openCloudModelPlugin)} />)}
+              onClick={() => this.props.app.commands.execute(CommandIDs.newCloudDeployment)} />)}
           columns={[
             {
               name: 'Deployment',

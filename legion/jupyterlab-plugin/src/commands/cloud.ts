@@ -13,10 +13,11 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import { showErrorMessage , showDialog, Dialog } from '@jupyterlab/apputils';
+import { showErrorMessage, showDialog, Dialog } from '@jupyterlab/apputils';
 
 import { CommandIDs, IAddCommandsOptions } from './base';
 import * as dialogs from '../components/dialogs';
+import * as cloudDialogs from '../components/dialogs/cloud';
 
 export interface ICloudScaleParameters {
 
@@ -48,7 +49,49 @@ export function addCommands(options: IAddCommandsOptions) {
         label: 'Deploy model in a cloud',
         caption: 'Create cloud deployment',
         execute: args => {
-
+            try {
+                const image = args['image'] as string;
+                if (image) {
+                    cloudDialogs.showCreateNewDeploymentDetails(
+                        image
+                    ).then(({ value, button }) => {
+                        if (button.accept) {
+                            let splashScreen = options.splash.show();
+                            options.api.cloud.createCloudDeployment({
+                                name: value.name,
+                                image,
+                                replicas: value.replicas,
+                                livenessProbeInitialDelay: 5,
+                                readinessProbeInitialDelay: 3
+                            }, options.apiState.credentials).then(_ => {
+                                splashScreen.dispose();
+                                commands.execute(CommandIDs.refreshCloud, {});
+                            }).catch(err => {
+                                splashScreen.dispose();
+                                showErrorMessage('Can not deploy image on a cloud', err);
+                            })
+                        }
+                    })
+                } else {
+                    dialogs.showChooseOrInputDialog(
+                        'Choose image to deploy',
+                        'Please choose finished training',
+                        'or type image name manually',
+                        options.apiState.cloud.trainings.filter(training => training.status.modelImage.length > 0).map(training => {
+                            return {
+                                value: training.status.modelImage,
+                                text: training.name
+                            }
+                        }),
+                        'Deploy image',
+                        false
+                    ).then(({ value }) => commands.execute(CommandIDs.newCloudDeployment, {
+                        image: value.input.length > 0 ? value.input : value.selection.value
+                    }))
+                }
+            } catch (err) {
+                showErrorMessage('Can not deploy model on a cloud', err);
+            }
         }
     });
 

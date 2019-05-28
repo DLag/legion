@@ -51,8 +51,8 @@ class TrainingCreateRequest(BaseModel):
 class DeploymentCreateRequest(BaseModel):
     name: str
     image: str
-    livenessProbeInitialDelay: int
-    readinessProbeInitialDelay: int
+    livenessProbeInitialDelay: int=5
+    readinessProbeInitialDelay: int=5
     replicas: int = 1
     resources: typing.Mapping[str, typing.Any] = {}
     annotations: typing.Mapping[str, str] = {}

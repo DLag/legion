@@ -25,6 +25,11 @@ export interface IChooseVariant {
     text: string;
 }
 
+export interface IChooseVariantOrInput {
+    selection?: IChooseVariant;
+    input: string;
+}
+
 class ChooseDialog extends Widget {
     constructor(body: string, variants: Array<IChooseVariant>) {
         super({ node: Private.buildChooseDialogBody(body, variants) });
@@ -41,6 +46,29 @@ class ChooseDialog extends Widget {
     }
 }
 
+class ChooseOrInputDialog extends Widget {
+    constructor(body: string, secondText: string, variants: Array<IChooseVariant>) {
+        super({ node: Private.buildChooseOrInputDialogBody(body, secondText, variants) });
+    }
+
+    getValue(): IChooseVariantOrInput {
+        const selects = this.node.getElementsByTagName('select');
+        const targetSelect = selects[0];
+
+        const inputs = this.node.getElementsByTagName('input');
+        const targetInput = inputs[0];
+
+
+        return {
+            selection: targetSelect.selectedIndex >= 0 ? {
+                value: targetSelect.options[targetSelect.selectedIndex].value,
+                text: targetSelect.options[targetSelect.selectedIndex].text
+            } : null,
+            input: targetInput.value
+        };
+    }
+}
+
 export function showChooseDialog(title: string, body: string, variants: Array<IChooseVariant>, confirmChoose: string, warn: boolean) {
     return showDialog({
         title: title,
@@ -49,8 +77,16 @@ export function showChooseDialog(title: string, body: string, variants: Array<IC
     })
 }
 
+export function showChooseOrInputDialog(title: string, body: string, secondText: string, variants: Array<IChooseVariant>, confirmChoose: string, warn: boolean) {
+    return showDialog({
+        title: title,
+        body: new ChooseOrInputDialog(body, secondText, variants),
+        buttons: [Dialog.cancelButton(), Dialog.okButton({ label: confirmChoose, displayType: warn ? 'warn' : 'default' })]
+    })
+}
+
 class PromptDialog extends Widget {
-    constructor(body: string,) {
+    constructor(body: string, ) {
         super({ node: Private.buildPromptDialogBody(body) });
     }
 
@@ -70,42 +106,74 @@ export function showPromptDialog(title: string, body: string, confirm: string, w
     })
 }
 
+/**
+ * PARTIALS
+ */
+
+export function createDialogBody(): HTMLElement {
+    let body = document.createElement('div');
+    return body;
+}
+
+export function createDialogInput(defaultValue?: string, placeholder?: string): HTMLInputElement {
+    let input = document.createElement('input');
+    input.className = `${style.inputFieldStyle} ${style.dialogLine}`;
+    if (defaultValue !== undefined) {
+        input.value = defaultValue;
+    }
+    if (placeholder !== undefined) {
+        input.placeholder = placeholder;
+    }
+    return input;
+}
+
+export function createSelect(variants: Array<IChooseVariant>): HTMLSelectElement {
+    let select = document.createElement('select');
+    select.className = `${style.inputFieldStyle}`;
+    variants.forEach(item => {
+        var option = document.createElement("option");
+        option.value = item.value;
+        option.text = item.text;
+        select.appendChild(option);
+    });
+    return select;
+}
+
+export function createDialogInputLabel(text): HTMLElement {
+    let description = document.createElement('span');
+    description.className = style.dialogInputLabel;
+    description.textContent = text;
+    return description;
+}
+
+export function createDescriptionLine(text): HTMLElement {
+    let description = document.createElement('span');
+    description.className = `jp-Dialog-body ${style.dialogLine}`;
+    description.textContent = text;
+    return description;
+}
+
+
 namespace Private {
     export function buildChooseDialogBody(bodyText: string, variants: Array<IChooseVariant>) {
-        let body = document.createElement('div');
-
-        let description = document.createElement('span');
-        description.className = 'jp-Dialog-body';
-        description.textContent = bodyText;
-        body.appendChild(description);
-
-        let select = document.createElement('select');
-        select.className = style.inputFieldStyle;
-        variants.forEach(item => {
-            var option = document.createElement("option");
-            option.value = item.value;
-            option.text = item.text;
-            select.appendChild(option);
-        });
-
-        body.appendChild(select);
-
+        const body = createDialogBody();
+        body.appendChild(createDialogInputLabel(bodyText));
+        body.appendChild(createSelect(variants));
+        return body;
+    }
+    export function buildChooseOrInputDialogBody(bodyText: string, secondText: string, variants: Array<IChooseVariant>) {
+        const body = createDialogBody();
+        body.appendChild(createDialogInputLabel(bodyText));
+        body.appendChild(createSelect(variants));
+        body.appendChild(createDialogInputLabel(secondText));
+        body.appendChild(createDialogInput());
         return body;
     }
 
     export function buildPromptDialogBody(bodyText: string) {
-        let body = document.createElement('div');
-
-        let description = document.createElement('span');
-        description.className = 'jp-Dialog-body';
-        description.textContent = bodyText;
-        body.appendChild(description);
-
-        let input = document.createElement('input');
-        input.className = style.inputFieldStyle;
-
-        body.appendChild(input);
-
+        const body = createDialogBody();
+        body.appendChild(createDialogInputLabel(bodyText));
+        body.appendChild(createDialogInput());
         return body;
     }
 }

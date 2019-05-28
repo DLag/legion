@@ -13,10 +13,10 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import * as style from '../../componentsStyle/dialogs';
-
 import { Dialog, showDialog } from '@jupyterlab/apputils';
 import { Widget } from '@phosphor/widgets';
+
+import * as base from './base';
 
 
 interface ILoginDialogValues {
@@ -73,29 +73,13 @@ export function showLogoutDialog(clusterName) {
 namespace Private {
 
     export function buildAuthorizeDialogBody() {
-        let body = document.createElement('div');
+        let body = base.createDialogBody();
 
-        let clusterTitle = document.createElement('h3');
-        clusterTitle.className = style.fieldLabelStyle;
-        clusterTitle.textContent = 'Cluster (EDI) url';
-        body.appendChild(clusterTitle);
+        body.appendChild(base.createDialogInputLabel('Cluster (EDI) url'));
+        body.appendChild(base.createDialogInput(undefined, 'https://edi-company-a.example.com'));
 
-        let inputTitle = document.createElement('input');
-        inputTitle.type = 'text';
-        inputTitle.placeholder = 'https://edi-company-a.example.com';
-        inputTitle.className = style.inputFieldStyle;
-        body.appendChild(inputTitle);
-
-        let tokenTitle = document.createElement('h3');
-        tokenTitle.className = style.fieldLabelStyle;
-        tokenTitle.textContent = 'Dex token';
-        body.appendChild(tokenTitle);
-
-        let inputToken = document.createElement('input');
-        inputToken.type = 'text';
-        inputToken.placeholder = 'ZW1haWw6dGVzdHMtdXNlckBsZWdpb24uY....';
-        inputToken.className = style.inputFieldStyle;
-        body.appendChild(inputToken);
+        body.appendChild(base.createDialogInputLabel('Dex token'));
+        body.appendChild(base.createDialogInput(undefined, 'ZW1haWw6dGVzdHMtdXNlckBsZWdpb24uY....'));
 
         return body;
     }

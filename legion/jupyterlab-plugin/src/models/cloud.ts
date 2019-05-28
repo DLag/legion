@@ -34,7 +34,7 @@ export interface ICloudTrainingResponseStatus {
     id: string;
     version: string;
     state: string;
-    image: string;
+    modelImage: string;
 }
 
 export interface ICloudTrainingResponse {
@@ -44,7 +44,11 @@ export interface ICloudTrainingResponse {
 }
 
 export interface ICloudDeploymentCreateRequest {
-
+    name: string;
+    image: string;
+    replicas: number;
+    livenessProbeInitialDelay: number;
+    readinessProbeInitialDelay: number;
 }
 
 export interface ICloudDeploymentScaleRequest {

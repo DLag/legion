@@ -32,4 +32,15 @@ export const inputFieldStyle = style({
     backgroundColor: 'var(--jp-layout-color0)',
     width: '100%',
     resize: 'none'
+});
+
+export const dialogLine = style({
+    marginBottom: 8
 })
+
+export const dialogInputLabel = style({
+    marginBottom: 3,
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    fontSize: 'var(--jp-ui-font-size0)'
+});

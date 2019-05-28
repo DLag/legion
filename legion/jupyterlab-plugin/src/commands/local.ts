@@ -79,9 +79,10 @@ export function addCommands(options: IAddCommandsOptions) {
                         false
                     ).then(({ value }) => commands.execute(CommandIDs.newLocalDeployment, { image: image, name: value }))
                 } else {
-                    dialogs.showChooseDialog(
+                    dialogs.showChooseOrInputDialog(
                         'Choose image to deploy',
                         'Please choose one image from list',
+                        'or type image name manually',
                         options.apiState.local.builds.map(build => {
                             return {
                                 value: build.imageName,
@@ -90,7 +91,9 @@ export function addCommands(options: IAddCommandsOptions) {
                         }),
                         'Deploy image',
                         false
-                    ).then(({ value }) => commands.execute(CommandIDs.newLocalDeployment, { image: value.value }))
+                    ).then(({ value }) => commands.execute(CommandIDs.newLocalDeployment, {
+                        image: value.input.length > 0 ? value.input : value.selection.value
+                    }))
                 }
             } catch (err) {
                 showErrorMessage('Can not deploy model locally', err);

@@ -13,6 +13,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-export { showChooseDialog, showPromptDialog } from './base';
+export { showChooseDialog, showChooseOrInputDialog, showPromptDialog } from './base';
 export { showLoginDialog, showLogoutDialog } from './authorize';
 export { showLocalDeploymentInformationDialog, REMOVE_DEPLOYMENT_LABEL } from './local';

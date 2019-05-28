@@ -15,9 +15,11 @@
  */
 import * as React from 'react';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
+import { Widget } from '@phosphor/widgets';
 
 import * as style from '../../componentsStyle/dialogs';
 import * as model from '../../models/cloud';
+import * as base from './base';
 
 export const REMOVE_DEPLOYMENT_LABEL = 'Remove deployment';
 export const SCALE_DEPLOYMENT_LABEL = 'Scale deployment';
@@ -25,7 +27,7 @@ export const CREATE_DEPLOYMENT_LABEL = 'Deploy on a cluster';
 
 export function showCloudTrainInformationDialog(training: model.ICloudTrainingResponse) {
   return showDialog({
-    title: `Cloud training information}`,
+    title: `Cloud training information`,
     body: (
       <div>
         <h3 className={style.fieldLabelStyle}>Name</h3>
@@ -35,7 +37,7 @@ export function showCloudTrainInformationDialog(training: model.ICloudTrainingRe
         <h3 className={style.fieldLabelStyle}>Model (id / version)</h3>
         <p className={style.fieldTextStyle}>{training.status.id} / {training.status.version}</p>
         <h3 className={style.fieldLabelStyle}>Image (toolchain)</h3>
-        <p className={style.fieldTextStyle}>?? ({training.spec.toolchain})</p>
+        <p className={style.fieldTextStyle}>{training.status.modelImage} ({training.spec.toolchain})</p>
         <h3 className={style.fieldLabelStyle}>VCS (source codes repository)</h3>
         <p className={style.fieldTextStyle}>{training.spec.vcsName}</p>
         <h3 className={style.fieldLabelStyle}>File (working directory)</h3>
@@ -44,7 +46,7 @@ export function showCloudTrainInformationDialog(training: model.ICloudTrainingRe
     ),
     buttons: [
       Dialog.createButton({ label: CREATE_DEPLOYMENT_LABEL }),
-      Dialog.okButton({ label: 'Close window' })
+      Dialog.cancelButton({ label: 'Close window' })
     ]
   })
 }
@@ -72,4 +74,49 @@ export function showCloudDeploymentInformationDialog(deploymentInformation: mode
       Dialog.okButton({ label: 'Close window' })
     ]
   })
+}
+
+export interface ICreateNewDeploymentDialogValues {
+  name: string;
+  replicas: number;
+}
+
+class CreateNewDeploymentDetailsDialog extends Widget {
+  constructor(deploymentImage: string) {
+    super({ node: Private.buildCreateNewDeploymentDetailsDialog(deploymentImage) });
+  }
+
+  getValue(): ICreateNewDeploymentDialogValues {
+    let inputs = this.node.getElementsByTagName('input');
+    const nameInput = inputs[0] as HTMLInputElement;
+    const replicasInput = inputs[1] as HTMLInputElement;
+
+    return {
+      name: nameInput.value,
+      replicas: parseInt(replicasInput.value)
+    };
+  }
+}
+
+export function showCreateNewDeploymentDetails(deploymentImage: string) {
+  return showDialog({
+    title: 'Creation of new deployment',
+    body: new CreateNewDeploymentDetailsDialog(deploymentImage),
+    buttons: [
+      Dialog.cancelButton(),
+      Dialog.okButton({ label: 'Deploy' })
+    ]
+  })
+}
+
+namespace Private {
+  export function buildCreateNewDeploymentDetailsDialog(deploymentImage: string) {
+    let body = base.createDialogBody();
+    body.appendChild(base.createDescriptionLine(`You are going to deploy image ${deploymentImage} on a cluster.`))
+    body.appendChild(base.createDialogInputLabel('Deployment name'))
+    body.appendChild(base.createDialogInput(undefined, 'name of deployment'))
+    body.appendChild(base.createDialogInputLabel('Count of replicas'))
+    body.appendChild(base.createDialogInput('1'))
+    return body;
+  }
 }
