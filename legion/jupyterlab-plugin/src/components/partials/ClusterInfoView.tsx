@@ -16,13 +16,15 @@
 
 import * as React from 'react';
 
+import * as style from '../../componentsStyle/ClusterInfoStyle';
+
+
 /** Interface for ClusterInfoView component state */
 export interface IClusterInfoViewNodeState {}
 
 /** Interface for ClusterInfoView component props */
 export interface IClusterInfoViewNodeProps {
   clusterName: string;
-  userName: string;
 }
 
 export class ClusterInfoView extends React.Component<
@@ -35,11 +37,10 @@ export class ClusterInfoView extends React.Component<
 
   render() {
     return (
-      <div>
-        <p>Cluster information</p>
+      <div className={style.infoHolder}>
+        <p className={style.infoTitle}>Cluster information</p>
 
-        <p>Cluster: {this.props.clusterName}</p>
-        <p>User name: {this.props.userName}</p>
+        <p className={style.infoPairLine}><span className={style.infoPairTitle}>Cluster:</span><a href={this.props.clusterName} target='_blank'>{this.props.clusterName}</a></p>
       </div>
     );
   }

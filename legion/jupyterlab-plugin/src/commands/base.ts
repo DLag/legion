@@ -34,12 +34,19 @@ export namespace CommandIDs {
     // Authorize
     export const unAuthorizeOnCluster = 'legion:cloud-reset-auth';
     export const authorizeOnCluster = 'legion:cloud-start-auth';
-    export const openLocalMetrics = 'legion:open-local-metrics';
 
     // Local
     export const newLocalBuild = 'legion:local-build-new';
     export const newLocalDeployment = 'legion:local-deployment-new';
     export const removeLocalDeployment = 'legion:local-deployment-remove';
+    export const openLocalMetrics = 'legion:open-local-metrics';
+
+    // Cloud
+    export const newCloudTraining = 'legion:cloud-training-new';
+    export const removeCloudTraining = 'legion:cloud-training-remove';
+    export const newCloudDeployment = 'legion:cloud-deployment-new';
+    export const scaleCloudDeployment = 'legion:cloud-deployment-scale';
+    export const removeCloudDeployment = 'legion:cloud-deployment-remove';
 
     // Settings
     export const refreshLocal = 'legion:refresh-local-mode';
@@ -47,14 +54,25 @@ export namespace CommandIDs {
     export const refreshCloud = 'legion:refresh-cloud-mode';
 
     export const palleteCommands = [
+        // UI
         openCloudModelPlugin,
         openLocalModelPlugin,
         mainRepository,
+        // Authorize
+        unAuthorizeOnCluster,
+        authorizeOnCluster,
+
+        // Local
+        openLocalMetrics,
+
+        // Cloud
+        scaleCloudDeployment,
+        removeCloudDeployment,
+
+        // Settings
         refreshLocal,
         refreshLocalBuildStatus,
         refreshCloud,
-        unAuthorizeOnCluster,
-        openLocalMetrics
     ];
 }
 

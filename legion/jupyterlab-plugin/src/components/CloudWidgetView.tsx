@@ -27,6 +27,7 @@ import * as dialog from '../components/dialogs/cloud';
 import { CommandIDs } from '../commands';
 import { IApiState } from '../models';
 import { ICloudAllEntitiesResponse } from '../models/cloud';
+import { ClusterInfoView } from './partials/ClusterInfoView';
 
 
 /** Interface for GitPanel component state */
@@ -88,6 +89,7 @@ export class CloudWidgetView extends React.Component<
     return (
       <div className={style.widgetPane}>
         <TitleBarView text={'Legion cluster mode'} onRefresh={() => this.props.app.commands.execute(CommandIDs.refreshCloud)} />
+        <ClusterInfoView clusterName={this.props.dataState.credentials.cluster} />
         <ListingView
           title={'Cloud trainings'}
           topButton={(
@@ -125,7 +127,9 @@ export class CloudWidgetView extends React.Component<
               onClick: () => dialog.showCloudTrainInformationDialog(training)
               .then(({ button }) => {
                 if (button.label == dialog.CREATE_DEPLOYMENT_LABEL) {
-                  //this.props.app.commands.execute(CommandIDs.newLocalDeployment, { image: build.imageName });
+                  this.props.app.commands.execute(CommandIDs.newCloudDeployment, {
+                    image: training.spec.entrypoint
+                  });
                 }
               })
             }
@@ -142,7 +146,7 @@ export class CloudWidgetView extends React.Component<
             {
               name: 'Deployment',
               flex: {
-                flexGrow: 1,
+                flexGrow: 3,
                 flexBasis: 70
               }
             },
@@ -156,7 +160,7 @@ export class CloudWidgetView extends React.Component<
             {
               name: 'Image',
               flex: {
-                flexGrow: 1,
+                flexGrow: 5,
                 flexBasis: 70
               }
             }
@@ -178,7 +182,13 @@ export class CloudWidgetView extends React.Component<
               onClick: () => dialog.showCloudDeploymentInformationDialog(deployment)
               .then(({ button }) => {
                 if (button.label == dialog.REMOVE_DEPLOYMENT_LABEL) {
-                  //this.props.app.commands.execute(CommandIDs.newLocalDeployment, { image: build.imageName });
+                  this.props.app.commands.execute(CommandIDs.removeCloudDeployment, { name: deployment.name });
+                } else if (button.label == dialog.SCALE_DEPLOYMENT_LABEL){
+                  this.props.app.commands.execute(CommandIDs.scaleCloudDeployment, {
+                    name: deployment.name,
+                    currentAvailableReplicas: deployment.status.availableReplicas,
+                    currentDesiredReplicas: deployment.spec.replicas
+                  });
                 }
               })
             }

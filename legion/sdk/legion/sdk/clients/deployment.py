@@ -38,7 +38,7 @@ class ModelDeployment(typing.NamedTuple):
     annotations: typing.Mapping[str, str] = {}
     replicas: int = 1
     liveness_probe_initial_delay: int = 3
-    readiness_probeInitial_delay: int = 3
+    readiness_probe_initial_delay: int = 3
     state: str = ""
     service_url: str = ""
     available_replicas: bool = ""
@@ -60,7 +60,7 @@ class ModelDeployment(typing.NamedTuple):
             annotations=md_spec.get('annotations', []),
             replicas=md_spec.get('replicas', ''),
             liveness_probe_initial_delay=md_spec.get('livenessProbeInitialDelay', ''),
-            readiness_probeInitial_delay=md_spec.get('readinessProbeInitialDelay', ''),
+            readiness_probe_initial_delay=md_spec.get('readinessProbeInitialDelay', ''),
             state=md_status.get('state', ''),
             service_url=md_status.get('serviceURL', ''),
             available_replicas=md_status.get('availableReplicas', 0),
@@ -79,7 +79,7 @@ class ModelDeployment(typing.NamedTuple):
                 'annotations': self.annotations,
                 'replicas': self.replicas,
                 'livenessProbeInitialDelay': self.liveness_probe_initial_delay,
-                'readinessProbeInitialDelay': self.readiness_probeInitial_delay
+                'readinessProbeInitialDelay': self.readiness_probe_initial_delay
             }
         }
         if with_status:

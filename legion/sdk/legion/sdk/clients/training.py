@@ -43,6 +43,7 @@ class ModelTraining(typing.NamedTuple):
     model_id: str = ""
     model_version: str = ""
     state: str = ""
+    image: str = ""
 
     @staticmethod
     def from_json(mt: typing.Dict[str, str]) -> 'ModelTraining':
@@ -65,7 +66,8 @@ class ModelTraining(typing.NamedTuple):
             reference=mt_spec.get('reference', ''),
             model_id=mt_status.get('id', ''),
             model_version=mt_status.get('version', ''),
-            state=mt_status.get('state', '')
+            state=mt_status.get('state', ''),
+            image=mt_status.get('modelImage', '')
         )
 
     def to_json(self, with_status=False) -> typing.Dict[str, str]:
@@ -90,7 +92,8 @@ class ModelTraining(typing.NamedTuple):
             result['status'] = {
                 'id': self.model_id,
                 'version': self.model_version,
-                'state': self.state
+                'state': self.state,
+                'modelImage': self.image
             }
         return result
 

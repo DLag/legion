@@ -16,7 +16,7 @@
 from notebook.utils import url_path_join
 
 from .local import LocalBuildsHandler, LocalBuildStatusHandler, LocalDeploymentsHandler, LocalAllEntitiesHandler
-from .cloud import CloudTrainingsHandler, CloudDeploymentsHandler, CloudAllEntitiesHandler
+from .cloud import CloudTrainingsHandler, CloudDeploymentsHandler, CloudAllEntitiesHandler, CloudDeploymentsScaleHandler
 
 ALL_HANDLERS = (
     # Local
@@ -27,6 +27,7 @@ ALL_HANDLERS = (
     # Cloud
     (CloudTrainingsHandler, ('cloud', 'trainings')),
     (CloudDeploymentsHandler, ('cloud', 'deployments')),
+    (CloudDeploymentsScaleHandler, ('cloud', 'deployments', 'scale')),
     (CloudAllEntitiesHandler, ('cloud',))
 )
 

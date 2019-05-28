@@ -13,18 +13,37 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
-import typing
+import functools
 
 from tornado.web import HTTPError
 
+from legion.sdk.clients.edi import EDIConnectionException, IncorrectAuthorizationToken
 from legion.sdk.clients.training import ModelTrainingClient, ModelTraining
 from legion.sdk.clients.deployment import ModelDeploymentClient, ModelDeployment
 from legion.sdk.clients.vcs import VcsClient, VCSCredential
 
 from .base import BaseLegionHandler
+from .datamodels.cloud import *
 
 LEGION_CLOUD_CREDENTIALS_EDI = 'X-Legion-Cloud-Endpoint'
 LEGION_CLOUD_CREDENTIALS_TOKEN = 'X-Legion-Cloud-Token'
+
+
+def _decorate_handler_for_exception(function):
+    """
+    Wrap API handler to properly handle EDI client exceptions
+    :param function: function to wrap
+    :return: wrapped function
+    """
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except IncorrectAuthorizationToken as base_exception:
+            raise HTTPError(log_message=str(base_exception), status_code=403) from base_exception
+        except EDIConnectionException as base_exception:
+            raise HTTPError(log_message=str(base_exception)) from base_exception
+    return wrapper
 
 
 class BaseCloudLegionHandler(BaseLegionHandler):
@@ -113,11 +132,32 @@ class CloudTrainingsHandler(BaseCloudLegionHandler):
     """
     This handler controls cloud trainings
     """
+
+    @_decorate_handler_for_exception
     def post(self):
+        data = TrainingCreateRequest(**self.get_json_body())
+
         try:
-            self.finish_with_json(self.get_cloud_trainings())
+            client = self.build_cloud_client(ModelTrainingClient)
+            client.create(data.convert_to_training())
+            self.finish_with_json()
         except Exception as query_exception:
-            raise HTTPError(log_message='Can not query cloud trainings') from query_exception
+            raise HTTPError(log_message='Can not create cluster training') from query_exception
+
+    @_decorate_handler_for_exception
+    def delete(self):
+        """
+        Remove cloud training
+        :return:
+        """
+        data = BasicNameRequest(**self.get_json_body())
+
+        try:
+            client = self.build_cloud_client(ModelTrainingClient)
+            client.delete(data.name)
+            self.finish_with_json()
+        except Exception as query_exception:
+            raise HTTPError(log_message='Can not remove cluster model training') from query_exception
 
 
 class CloudDeploymentsHandler(BaseCloudLegionHandler):
@@ -125,41 +165,64 @@ class CloudDeploymentsHandler(BaseCloudLegionHandler):
     This handler controls cloud deployments
     """
 
+    @_decorate_handler_for_exception
     def post(self):
         """
         Get information about cloud deployments
         :return: None
         """
+        data = DeploymentCreateRequest(**self.get_json_body())
+
         try:
-            self.finish_with_json(self.get_cloud_deployments())
+            client = self.build_cloud_client(ModelDeploymentClient)
+            client.create(data.convert_to_deployment())
+            self.finish_with_json()
         except Exception as query_exception:
             raise HTTPError(log_message='Can not query cloud deployments') from query_exception
 
+    @_decorate_handler_for_exception
     def delete(self):
         """
         Remove local deployment
         :return:
         """
-        try:
-            data = self.get_json_body()
-            name = data.get('name')
-        except Exception as parsing_exception:
-            raise HTTPError(log_message='Invalid data from client') from parsing_exception
+        data = BasicNameRequest(**self.get_json_body())
 
         try:
             client = self.build_cloud_client(ModelDeploymentClient)
-            client.delete(name)
+            client.delete(data.name)
         except Exception as query_exception:
             raise HTTPError(log_message='Can not remove cluster model deployment') from query_exception
 
         self.finish_with_json()
 
 
+class CloudDeploymentsScaleHandler(BaseCloudLegionHandler):
+    """
+    This handler controls cloud deployments
+    """
+
+    @_decorate_handler_for_exception
+    def put(self):
+        """
+        Get information about cloud deployments
+        :return: None
+        """
+        data = ScaleRequest(**self.get_json_body())
+        
+        try:
+            client = self.build_cloud_client(ModelDeploymentClient)
+            client.scale(data.name, data.newScale)
+            self.finish_with_json()
+        except Exception as query_exception:
+            raise HTTPError(log_message='Can not query cloud deployments') from query_exception
+
 
 class CloudAllEntitiesHandler(BaseCloudLegionHandler):
     """
     This handler return all information for cloud mode
     """
+    @_decorate_handler_for_exception
     def get(self):
         self.finish_with_json({
             'trainings': self.get_cloud_trainings(),

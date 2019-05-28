@@ -24,6 +24,7 @@ from legion.sdk.containers.docker import get_current_docker_container_id
 from legion.sdk.containers.definitions import ModelDeploymentDescription, ModelBuildInformation
 
 from .base import BaseLegionHandler
+from .datamodels.local import *
 
 
 BUILD_LOCK = multiprocessing.Lock()
@@ -154,7 +155,6 @@ class LocalBuildsHandler(BaseLocalLegionHandler):
         self.finish_with_json()
 
 
-
 class LocalDeploymentsHandler(BaseLocalLegionHandler):
     """
     This handler controls all local deployments
@@ -175,16 +175,10 @@ class LocalDeploymentsHandler(BaseLocalLegionHandler):
         Deploy new model locally
         :return: new deployment information
         """
-        try:
-            data = self.get_json_body()
-            name = data.get('name')
-            image = data.get('image')
-            port = int(data.get('port', 0))
-        except Exception as parsing_exception:
-            raise HTTPError(log_message='Invalid data from client') from parsing_exception
+        data = DeployCreateRequest(**self.get_json_body())
 
         try:
-            deployments = self.client.deploy(name, image, port)
+            deployments = self.client.deploy(data.name, data.image, data.port)
         except Exception as query_exception:
             raise HTTPError(log_message='Can not deploy model locally') from query_exception
 
@@ -198,18 +192,13 @@ class LocalDeploymentsHandler(BaseLocalLegionHandler):
         Remove local deployment
         :return:
         """
-        try:
-            data = self.get_json_body()
-            name = data.get('name')
-        except Exception as parsing_exception:
-            raise HTTPError(log_message='Invalid data from client') from parsing_exception
+        data = BasicNameRequest(**self.get_json_body())
 
         try:
-            self.client.undeploy(name)
+            self.client.undeploy(data.name)
+            self.finish_with_json()
         except Exception as query_exception:
             raise HTTPError(log_message='Can not remove local model deployment') from query_exception
-
-        self.finish_with_json()
 
 
 class LocalBuildStatusHandler(BaseLocalLegionHandler):

@@ -46,6 +46,20 @@ class WrongHttpStatusCode(Exception):
         self.status_code = status_code
 
 
+class EDIConnectionException(Exception):
+    """
+    Exception that says that client can not reach EDI server
+    """
+    pass
+
+
+class IncorrectAuthorizationToken(EDIConnectionException):
+    """
+    Exception that says that provided EDI authorization token is incorrect
+    """
+    pass
+
+
 class RemoteEdiClient:
     """
     EDI client
@@ -108,6 +122,7 @@ class RemoteEdiClient:
 
                 response = self._request(action, target_url, payload, cookies=cookies)
             except requests.exceptions.ConnectionError as exception:
+                print(repr(exception))
                 LOGGER.error('Failed to connect to {}: {}. Retrying'.format(self._base, exception))
                 raised_exception = exception
             else:
@@ -116,21 +131,19 @@ class RemoteEdiClient:
 
             left_retries -= 1
         else:
-            raise Exception('Failed to connect to {}. No one retry left. Exception: {}'.format(
-                self._base, raised_exception
-            ))
+            print('FINAL')
+            print(repr(raised_exception))
+            raise EDIConnectionException('Can not reach {}'.format(self._base)) from raised_exception
 
         # We assume if there were redirects then credentials are out of date
         if response.history:
             LOGGER.debug('Status code: "{}", Response: "{}"'.format(response.status_code, response.text))
 
             parse_result = urlparse(target_url)
-
-            raise Exception(
+            raise IncorrectAuthorizationToken(
                 'Credentials are not correct. You should open {}://{} url in a browser to get fresh token'.format(
                     parse_result.scheme, parse_result.netloc
-                )
-            )
+                )) from raised_exception
 
         try:
             answer = json.loads(response.text)

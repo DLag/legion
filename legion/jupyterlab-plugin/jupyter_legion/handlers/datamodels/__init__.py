@@ -13,16 +13,3 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
-import json
-
-from notebook.base.handlers import APIHandler
-
-
-class BaseLegionHandler(APIHandler):
-    def initialize(self, state, logger, **kwargs):
-        self.state = state
-        self.logger = logger
-        self.logger.debug('%s initialized', self.__class__.__name__)
-
-    def finish_with_json(self, data=None):
-        self.finish(json.dumps(data))

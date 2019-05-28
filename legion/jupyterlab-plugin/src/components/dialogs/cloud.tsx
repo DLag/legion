@@ -20,6 +20,7 @@ import * as style from '../../componentsStyle/dialogs';
 import * as model from '../../models/cloud';
 
 export const REMOVE_DEPLOYMENT_LABEL = 'Remove deployment';
+export const SCALE_DEPLOYMENT_LABEL = 'Scale deployment';
 export const CREATE_DEPLOYMENT_LABEL = 'Deploy on a cluster';
 
 export function showCloudTrainInformationDialog(training: model.ICloudTrainingResponse) {
@@ -67,6 +68,7 @@ export function showCloudDeploymentInformationDialog(deploymentInformation: mode
     ),
     buttons: [
       Dialog.createButton({ label: REMOVE_DEPLOYMENT_LABEL, displayType: 'warn' }),
+      Dialog.createButton({ label: SCALE_DEPLOYMENT_LABEL }),
       Dialog.okButton({ label: 'Close window' })
     ]
   })

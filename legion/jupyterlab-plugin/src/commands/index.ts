@@ -19,10 +19,11 @@ import { ISplashScreen } from "@jupyterlab/apputils";
 
 import * as authorize from './authorize';
 import * as local from './local';
+import * as cloud from './cloud';
 import * as settings from './settings';
 import * as ui from './ui';
 
-const Handlers = [authorize, local, settings, ui];
+const Handlers = [authorize, local, cloud, settings, ui];
 
 export { CommandIDs, IAddCommandsOptions } from './base'
 
@@ -38,7 +39,6 @@ export function addCommands(app: JupyterLab, services: ServiceManager, apiState:
     const options = { app, services, apiState, api, splash };
 
     Handlers.forEach(handler => {
-        console.log('Processing handler ', handler);
         handler.addCommands(options)
     });
 }

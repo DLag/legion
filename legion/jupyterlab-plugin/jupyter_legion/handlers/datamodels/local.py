@@ -13,16 +13,18 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
-import json
+import typing
+from pydantic import BaseModel
 
-from notebook.base.handlers import APIHandler
+from legion.sdk.clients.training import ModelTraining
+from legion.sdk.clients.deployment import ModelDeployment
 
 
-class BaseLegionHandler(APIHandler):
-    def initialize(self, state, logger, **kwargs):
-        self.state = state
-        self.logger = logger
-        self.logger.debug('%s initialized', self.__class__.__name__)
+class BasicNameRequest(BaseModel):
+    name: str
 
-    def finish_with_json(self, data=None):
-        self.finish(json.dumps(data))
+
+class DeployCreateRequest(BaseModel):
+    name: str
+    image: str
+    port: int = 0
