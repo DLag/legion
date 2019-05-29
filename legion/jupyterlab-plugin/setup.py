@@ -18,11 +18,6 @@ import setuptools
 
 from jupyter_legion import __version__
 
-from setupbase import (
-    create_cmdclass,
-    find_packages
-)
-
 data_files_spec = [
     ('etc/jupyter/jupyter_notebook_config.d',
      'jupyter-config/jupyter_notebook_config.d'),
@@ -38,10 +33,9 @@ setuptools.setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    cmdclass=create_cmdclass(data_files_spec=data_files_spec),
     keywords='jupyter jupyterlab',
     python_requires='>=3.6',
-    packages=find_packages(),
+    packages=('jupyter_legion',),
     data_files=[('', ["README.md"])],
     zip_safe=False,
     install_requires=[

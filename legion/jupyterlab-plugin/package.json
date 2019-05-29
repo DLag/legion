@@ -7,7 +7,7 @@
     "jupyterlab",
     "jupyterlab-extension"
   ],
-  "license": "Apache v2",
+  "license": "Apache-2.0",
   "author": "Legion Platform Team",
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
@@ -17,7 +17,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build tsconfig.json",
     "clean": "rimraf lib",
     "prepublish": "npm run build",
     "watch": "tsc -w",
