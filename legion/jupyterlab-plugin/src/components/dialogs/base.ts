@@ -39,10 +39,18 @@ class ChooseDialog extends Widget {
         let selects = this.node.getElementsByTagName('select');
         const targetSelect = selects[0];
 
-        return {
-            value: targetSelect.options[targetSelect.selectedIndex].value,
-            text: targetSelect.options[targetSelect.selectedIndex].text
-        };
+        if (targetSelect.selectedIndex >= 0) {
+            return {
+                value: targetSelect.options[targetSelect.selectedIndex].value,
+                text: targetSelect.options[targetSelect.selectedIndex].text
+            };
+        }
+        else {
+            return {
+                value: undefined,
+                text: undefined
+            }
+        }
     }
 }
 

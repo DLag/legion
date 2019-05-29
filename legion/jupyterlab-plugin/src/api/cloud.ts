@@ -30,6 +30,7 @@ export interface ICloudApi {
     // Builds
     createCloudTraining: (request: models.ICloudTrainingRequest, credentials: ICloudCredentials) => Promise<models.ICloudTrainingResponse>,
     getCloudTrainings: (credentials: ICloudCredentials) => Promise<Array<models.ICloudTrainingResponse>>,
+    removeCloudTraining: (request: models.ICloudTrainingRemoveRequest, credentials: ICloudCredentials) => Promise<void>,
 
     // Deployments
     getCloudDeployments: (credentials: ICloudCredentials) => Promise<Array<models.ICloudDeploymentResponse>>,
@@ -66,6 +67,18 @@ export class CloudApi implements IApiGroup, ICloudApi {
                 throw new ServerConnection.ResponseError(response, data.message);
             }
             return response.json();
+        } catch (err) {
+            throw new ServerConnection.NetworkError(err);
+        }
+    }
+    async removeCloudTraining(request: models.ICloudTrainingRemoveRequest, credentials: ICloudCredentials): Promise<void> {
+        try {
+            let response = await httpRequest(URLs.cloudTrainingsUrl, 'DELETE', request, credentials);
+            if (response.status !== 200) {
+                const data = await response.json();
+                throw new ServerConnection.ResponseError(response, data.message);
+            }
+            return null;
         } catch (err) {
             throw new ServerConnection.NetworkError(err);
         }

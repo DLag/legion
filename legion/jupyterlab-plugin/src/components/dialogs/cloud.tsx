@@ -21,9 +21,10 @@ import * as style from '../../componentsStyle/dialogs';
 import * as model from '../../models/cloud';
 import * as base from './base';
 
-export const REMOVE_DEPLOYMENT_LABEL = 'Remove deployment';
-export const SCALE_DEPLOYMENT_LABEL = 'Scale deployment';
-export const CREATE_DEPLOYMENT_LABEL = 'Deploy on a cluster';
+export const REMOVE_DEPLOYMENT_LABEL = 'Remove';
+export const REMOVE_TRAINING_LABEL = 'Remove';
+export const SCALE_DEPLOYMENT_LABEL = 'Scale';
+export const CREATE_DEPLOYMENT_LABEL = 'Deploy';
 
 export function showCloudTrainInformationDialog(training: model.ICloudTrainingResponse) {
   return showDialog({
@@ -51,11 +52,12 @@ export function showCloudTrainInformationDialog(training: model.ICloudTrainingRe
         <h3 className={style.fieldLabelStyle}>VCS (source codes repository)</h3>
         <p className={style.fieldTextStyle}>{training.spec.vcsName}</p>
         <h3 className={style.fieldLabelStyle}>File (working directory)</h3>
-        <p className={style.fieldTextStyle}>{training.spec.entrypoint} ({training.spec.workDir})</p>
+        <p className={style.fieldTextStyle}>{training.spec.entrypoint} {training.spec.workDir.length > 0 ? `(${training.spec.workDir})` : ''}</p>
       </div>
     ),
     buttons: [
       Dialog.createButton({ label: CREATE_DEPLOYMENT_LABEL }),
+      Dialog.warnButton({ label: REMOVE_TRAINING_LABEL }),
       Dialog.cancelButton({ label: 'Close window' })
     ]
   })
@@ -152,6 +154,61 @@ export function showIssueModelAccessToken() {
   })
 }
 
+export interface ICreateNewTrainingDialogValues {
+  name?: string;
+  toolchain?: string;
+  entrypoint?: string;
+  image?: string;
+  vcsName?: string;
+  workDir?: string;
+
+  isFinished: boolean;
+}
+
+class CreateNewTrainingDialog extends Widget {
+  constructor(availableVCSs: Array<model.IVCSResponse>, defaultValues: ICreateNewTrainingDialogValues) {
+    super({ node: Private.buildCreateNewTrainingDialog(availableVCSs, defaultValues) });
+  }
+
+  getValue(): ICreateNewTrainingDialogValues {
+    let inputs = this.node.getElementsByTagName('input');
+    let selects = this.node.getElementsByTagName('select');
+
+    const nameInput = inputs[0] as HTMLInputElement;
+    const entrypointInput = inputs[1] as HTMLInputElement;
+    const imageInput = inputs[2] as HTMLInputElement;
+    const workDirInput = inputs[3] as HTMLInputElement;
+
+    const toolchainSelect = selects[0] as HTMLSelectElement;
+    const vcsSelect = selects[1] as HTMLSelectElement;
+
+    let data = {
+      name: nameInput.value,
+      toolchain: toolchainSelect.selectedIndex >= 0 ? toolchainSelect.options[toolchainSelect.selectedIndex].value : '',
+      entrypoint: entrypointInput.value,
+      image: imageInput.value,
+      vcsName: vcsSelect.selectedIndex >= 0 ? vcsSelect.options[vcsSelect.selectedIndex].value : '',
+      workDir: workDirInput.value,
+      isFinished: null
+    };
+
+    data.isFinished = data.name.length > 0 && data.toolchain.length > 0 && data.entrypoint.length > 0 && data.vcsName.length > 0;
+
+    return data;
+  }
+}
+
+export function showCreateNewTrainingDialog(availableVCSs: Array<model.IVCSResponse>, defaultValues?: ICreateNewTrainingDialogValues) {
+  return showDialog({
+    title: 'Creation of cloud training',
+    body: new CreateNewTrainingDialog(availableVCSs, defaultValues !== undefined ? defaultValues : {isFinished: false}),
+    buttons: [
+      Dialog.cancelButton(),
+      Dialog.okButton({ label: 'Train on a cloud' })
+    ]
+  })
+}
+
 namespace Private {
   export function buildCreateNewDeploymentDetailsDialog(deploymentImage: string) {
     let body = base.createDialogBody();
@@ -162,12 +219,45 @@ namespace Private {
     body.appendChild(base.createDialogInput('1'))
     return body;
   }
+
   export function buildIssueModelAccessTokenDialog() {
     let body = base.createDialogBody();
     body.appendChild(base.createDialogInputLabel('Model ID'))
     body.appendChild(base.createDialogInput())
     body.appendChild(base.createDialogInputLabel('Model version'))
     body.appendChild(base.createDialogInput())
+    return body;
+  }
+
+  export function buildCreateNewTrainingDialog(availableVCSs: Array<model.IVCSResponse>, defaultValues: ICreateNewTrainingDialogValues){
+    let body = base.createDialogBody();
+    body.appendChild(base.createDescriptionLine('You\'re going to create new training on a cloud'));
+    body.appendChild(base.createDialogInputLabel('Name of training'));
+    body.appendChild(base.createDialogInput(defaultValues.name));
+    body.appendChild(base.createDialogInputLabel('Toolchain'));
+    body.appendChild(base.createSelect([
+      {
+        text: 'Python (for *.py files)',
+        value: 'python',
+      },
+      {
+        text: 'Jupyter (for *.ipynb files)',
+        value: 'jupyter',
+      }
+    ]));
+    body.appendChild(base.createDialogInputLabel('Entry point (main train file)'));
+    body.appendChild(base.createDialogInput(defaultValues.entrypoint));
+    body.appendChild(base.createDialogInputLabel('Custom train image (toolchain\'s by default)'));
+    body.appendChild(base.createDialogInput(defaultValues.image));
+    body.appendChild(base.createDialogInputLabel('VCS (Sources Codes Repository)'));
+    body.appendChild(base.createSelect(availableVCSs.map(vcs => {
+      return {
+        text: `${vcs.name} (${vcs.spec.uri}, ref: ${vcs.spec.defaultReference})`,
+        value: vcs.name
+      }
+    })));
+    body.appendChild(base.createDialogInputLabel('Custom working directory'));
+    body.appendChild(base.createDialogInput(defaultValues.workDir));
     return body;
   }
 }

@@ -14,9 +14,11 @@
  *   limitations under the License.
  */
 import { showErrorMessage, showDialog, Dialog } from '@jupyterlab/apputils';
+import { ReadonlyJSONObject } from '@phosphor/coreutils';
 
 import { CommandIDs, IAddCommandsOptions } from './base';
 import * as dialogs from '../components/dialogs';
+import * as models from '../models/cloud';
 import * as cloudDialogs from '../components/dialogs/cloud';
 
 export interface ICloudScaleParameters {
@@ -32,7 +34,30 @@ export function addCommands(options: IAddCommandsOptions) {
     commands.addCommand(CommandIDs.newCloudTraining, {
         label: 'Train model in a cloud',
         caption: 'Create new cloud training',
-        execute: () => {
+        execute: args => {
+
+            let values = (args as unknown) as cloudDialogs.ICreateNewTrainingDialogValues;
+
+            cloudDialogs.showCreateNewTrainingDialog(options.apiState.cloud.vcss, values)
+                .then(({ value, button }) => {
+                    if (button.accept) {
+                        if (!value.isFinished) {
+                            showErrorMessage('Can not create cloud training', 'Not all fields are filled')
+                                .then(() => commands.execute(CommandIDs.newCloudTraining, (value as unknown) as ReadonlyJSONObject))
+                        } else {
+                            let splashScreen = options.splash.show();
+                            options.api.cloud.createCloudTraining(value as models.ICloudTrainingRequest, options.apiState.credentials).then(() => {
+                                splashScreen.dispose();
+                                commands.execute(CommandIDs.refreshCloud, {});
+                            }).catch(err => {
+                                splashScreen.dispose();
+                                showErrorMessage('Can not create cloud deployment', err);
+                                commands.execute(CommandIDs.refreshCloud, {});
+                            })
+                        }
+                    }
+                })
+
 
         }
     });
@@ -41,7 +66,45 @@ export function addCommands(options: IAddCommandsOptions) {
         label: 'Remove cloud training',
         caption: 'Stop and remove cloud training',
         execute: args => {
-
+            try {
+                const name = args['name'] as string;
+                if (name) {
+                    showDialog({
+                        title: `Removing training`,
+                        body: `Do you want to remove training ${name}?`,
+                        buttons: [Dialog.cancelButton(), Dialog.okButton({ label: 'Remove', displayType: 'warn' })]
+                    }).then(({ button }) => {
+                        if (button.accept) {
+                            let splashScreen = options.splash.show();
+                            options.api.cloud.removeCloudTraining({
+                                name: name
+                            }, options.apiState.credentials).then(() => {
+                                splashScreen.dispose();
+                                commands.execute(CommandIDs.refreshCloud, {});
+                            }).catch(err => {
+                                splashScreen.dispose();
+                                showErrorMessage('Can not remove cloud deployment', err);
+                                commands.execute(CommandIDs.refreshCloud, {});
+                            })
+                        }
+                    })
+                } else {
+                    dialogs.showChooseDialog(
+                        'Choose training to remove',
+                        'Please choose one training from list',
+                        options.apiState.cloud.trainings.map(training => {
+                            return {
+                                value: training.name,
+                                text: training.name
+                            }
+                        }),
+                        'Remove deployment',
+                        true
+                    ).then(({ value }) => commands.execute(CommandIDs.removeCloudTraining, { name: value.value }))
+                }
+            } catch (err) {
+                showErrorMessage('Can not remove cloud training', err);
+            }
         }
     });
 

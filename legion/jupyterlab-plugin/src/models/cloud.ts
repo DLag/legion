@@ -15,6 +15,12 @@
  */
 
 export interface ICloudTrainingRequest {
+    name: string;
+    toolchain: string;
+    entrypoint: string;
+    image: string;
+    vcsName: string;
+    workDir: string;
 
 }
 
@@ -41,6 +47,10 @@ export interface ICloudTrainingResponse {
     name: string;
     spec: ICloudTrainingResponseSpec;
     status: ICloudTrainingResponseStatus;
+}
+
+export interface ICloudTrainingRemoveRequest {
+    name: string;
 }
 
 export interface ICloudDeploymentCreateRequest {

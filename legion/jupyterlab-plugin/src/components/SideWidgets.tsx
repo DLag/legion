@@ -110,6 +110,7 @@ export class LegionSideWidget extends Widget {
   show(): void {
     super.show();
     this.component.refresh();
+    this.component.onActivate();
   }
 
   refresh(): void {

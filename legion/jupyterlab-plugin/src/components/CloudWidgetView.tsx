@@ -72,6 +72,12 @@ export class CloudWidgetView extends React.Component<
     }
   };
 
+  onActivate(){
+    if (this.props.dataState.credentials){
+      this.props.app.commands.execute(CommandIDs.refreshCloud);
+    }
+  }
+
   renderAuthView() {
     return (
       <div className={style.widgetPane}>
@@ -96,7 +102,7 @@ export class CloudWidgetView extends React.Component<
             <SmallButtonView
               text={'New training'}
               iconClass={'jp-AddIcon'}
-              onClick={() => this.props.app.commands.execute(CommandIDs.openCloudModelPlugin)} />)}
+              onClick={() => this.props.app.commands.execute(CommandIDs.newCloudTraining)} />)}
           columns={[
             {
               name: 'Training',
@@ -129,6 +135,10 @@ export class CloudWidgetView extends React.Component<
                 if (button.label == dialog.CREATE_DEPLOYMENT_LABEL) {
                   this.props.app.commands.execute(CommandIDs.newCloudDeployment, {
                     image: training.status.modelImage
+                  });
+                } else if (button.label == dialog.REMOVE_TRAINING_LABEL) {
+                  this.props.app.commands.execute(CommandIDs.removeCloudTraining, {
+                    name: training.name
                   });
                 }
               })

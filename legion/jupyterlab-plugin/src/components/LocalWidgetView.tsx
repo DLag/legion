@@ -71,6 +71,10 @@ export class LocalWidgetView extends React.Component<
     }
   };
 
+  onActivate(){
+    this.props.app.commands.execute(CommandIDs.refreshLocal);
+  }
+
   componentWillUpdate(_: ILocalWidgetViewNodeProps, newState: ILocalWidgetViewNodeState) {
     if (newState.buildingInProcess != this.state.buildingInProcess) {
       if (newState.buildingInProcess) {
