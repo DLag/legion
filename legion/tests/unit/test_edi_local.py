@@ -36,7 +36,8 @@ from legion_test_utils import \
 
 
 DOCKER_INSPECT_API_CALL = '/containers/json?limit=-1&all=0&size=0&trunc_cmd=0'
-DOCKER_LIST_IMAGES_API_CALL = '/images/json?only_ids=0&all=0&filters=%7B%22label%22%3A+%5B%22com.epam.legion.model.id%22%5D%7D'
+DOCKER_LIST_IMAGES_API_CALL = '/images/json?only_ids=0&all=0&filters=%' + \
+                              '7B%22label%22%3A+%5B%22com.epam.legion.model.id%22%5D%7D'
 
 MODEL_A_ID = 'test-math'
 MODEL_A_VERSION = '1.0'
@@ -298,7 +299,8 @@ class TestEDILocalListBuilds(TestEDILocal):
         items = self.client.get_builds()
         self.assertEqual(len(items), 2, 'count of detected images is incorrect')
         self.assertListEqual(items, [
-            ModelBuildInformation(image_name='legion-model-test-summation:1.0.190517145902.root.0000', model_id='test-summation', model_version='1.0'),
+            ModelBuildInformation(image_name='legion-model-test-summation:1.0.190517145902.root.0000',
+                                  model_id='test-summation', model_version='1.0'),
             ModelBuildInformation(image_name='sha256:a4d8852b0d', model_id='test-summation', model_version='1.0')
         ])
 
