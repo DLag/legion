@@ -32,7 +32,7 @@ RUN yarn build
 RUN npm pack .
 
 # Image for getting jupyterlab sources for linking
-FROM python:3.6.8-stretch AS plugin-frontend-linter
+FROM python:3.6.8-stretch AS plugin-frontend-rebuilder
 
 RUN \
   apt-get update && \
@@ -54,6 +54,8 @@ RUN pip3 install --disable-pip-version-check jupyterlab==0.35.6
 # Copy and install Legion's plugin
 COPY --from=plugin-frontend-builder /opt/legion-plugin/jupyter_legion-0.1.0.tgz jupyter_legion.tgz
 RUN jupyter labextension install jupyter_legion.tgz
+# We have to remove folder with node_modules and other build-related staff that is not required for running
+RUN rm -rf /usr/local/share/jupyter/lab/staging
 
 # Main image
 FROM python:3.6.8-stretch
@@ -73,7 +75,7 @@ RUN  cd legion/toolchains/python && pipenv install --system --three
 COPY legion/cli/Pipfile legion/cli/Pipfile.lock "${WORK_DIR}/legion/cli/"
 RUN  cd legion/cli && pipenv install --system --three
 
-COPY --from=plugin-frontend-linter /usr/local/share/jupyter /usr/local/share/jupyter
+COPY --from=plugin-frontend-rebuilder /usr/local/share/jupyter /usr/local/share/jupyter
 
 COPY containers/toolchains/python/legion-doc.txt /opt/legion/
 COPY containers/toolchains/python/jupyter_notebook_config.py /etc/jupyter/
