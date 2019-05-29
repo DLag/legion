@@ -27,6 +27,7 @@ export interface ITitleBarViewNodeState { }
 export interface ITitleBarViewNodeProps {
   text: string;
   onRefresh: () => void;
+  isRefreshing?: boolean;
 }
 
 export class TitleBarView extends React.Component<
@@ -38,15 +39,17 @@ export class TitleBarView extends React.Component<
   }
 
   render() {
+
     return (
       <div className={style.holder}>
         <h2 className={style.text}>
           {this.props.text}
         </h2>
         <SmallButtonView
-          text={'Refresh'}
-          iconClass={'jp-RefreshIcon'}
-          onClick={this.props.onRefresh ? this.props.onRefresh.bind(this) : null} />
+          text={this.props.isRefreshing ? 'Refreshing is in a process' : 'Refresh'}
+          cursor={this.props.isRefreshing ? 'wait' : 'pointer'}
+          iconClass={'jp-RefreshIcon ' + (this.props.isRefreshing === true ? style.refreshAnimated : '')}
+          onClick={(this.props.onRefresh && !this.props.isRefreshing) ? this.props.onRefresh.bind(this) : null} />
       </div>
     );
   }

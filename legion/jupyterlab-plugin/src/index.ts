@@ -21,6 +21,9 @@ import {
 import { ICommandPalette, ISplashScreen } from "@jupyterlab/apputils";
 import { ISettingRegistry, IStateDB } from "@jupyterlab/coreutils";
 import { IMainMenu } from '@jupyterlab/mainmenu';
+import {
+  IFileBrowserFactory
+} from '@jupyterlab/filebrowser';
 
 import { Menu } from '@phosphor/widgets';
 import { CommandRegistry } from '@phosphor/commands';
@@ -43,6 +46,8 @@ import { IApiState, buildInitialAPIState } from './models/apiState';
 export const PLUGIN_ID = 'jupyter.extensions.legion';
 export const EXTENSION_ID = 'jupyter.extensions.jupyter_legion';
 
+const FILE_MANAGER_NOT_DIRECTORY = '.jp-DirListing-item[data-isdir="false"]';
+const TRAIN_ON_CLOUD_COMMAND_RANK = 99;
 
 // tslint:disable-next-line: variable-name
 export const ILegionExtension = new Token<ILegionExtension>(EXTENSION_ID);
@@ -62,7 +67,8 @@ const plugin: JupyterLabPlugin<ILegionExtension> = {
     ICommandPalette,
     ISettingRegistry,
     ISplashScreen,
-    IStateDB
+    IStateDB,
+    IFileBrowserFactory
   ],
   provides: ILegionExtension,
   activate,
@@ -210,13 +216,14 @@ function activate(
   palette: ICommandPalette,
   settings: ISettingRegistry,
   splash: ISplashScreen,
-  state: IStateDB
+  state: IStateDB,
+  factory: IFileBrowserFactory
 ): ILegionExtension {
   // Build extension
   let legionExtension = new LegionExtension(app, restorer, state);
   // Register commands in application (in top menu & palette)
 
-  addCommands(app, app.serviceManager, legionExtension.apiState, legionExtension.api, splash);
+  addCommands(app, factory.tracker, app.serviceManager, legionExtension.apiState, legionExtension.api, splash);
 
   for (let command in CommandIDs) {
     palette.addItem({
@@ -224,6 +231,13 @@ function activate(
       category: "Legion commands"
     });
   }
+
+  app.contextMenu.addItem({
+    command: CommandIDs.newCloudTrainingFromContextMenu,
+    selector: FILE_MANAGER_NOT_DIRECTORY,
+    rank: TRAIN_ON_CLOUD_COMMAND_RANK
+  });
+
   let topMenuNode = buildTopMenuItems(app.commands);
   mainMenu.addMenu(topMenuNode, { rank: 60 });
 

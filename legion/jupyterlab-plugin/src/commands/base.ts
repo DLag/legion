@@ -15,7 +15,8 @@
  */
 import { JupyterLab } from '@jupyterlab/application';
 import { ServiceManager } from '@jupyterlab/services';
-import { ISplashScreen } from "@jupyterlab/apputils";
+import { ISplashScreen, InstanceTracker } from "@jupyterlab/apputils";
+import { FileBrowser } from '@jupyterlab/filebrowser';
 
 import { IApiState } from '../models';
 import { ILegionApi } from '../api';
@@ -43,6 +44,7 @@ export namespace CommandIDs {
 
     // Cloud
     export const newCloudTraining = 'legion:cloud-training-new';
+    export const newCloudTrainingFromContextMenu = 'legion:cloud-training-new-from-context-menu';
     export const removeCloudTraining = 'legion:cloud-training-remove';
     export const newCloudDeployment = 'legion:cloud-deployment-new';
     export const scaleCloudDeployment = 'legion:cloud-deployment-scale';
@@ -80,6 +82,7 @@ export namespace CommandIDs {
 
 export interface IAddCommandsOptions {
     app: JupyterLab;
+    tracker: InstanceTracker<FileBrowser>;
     services: ServiceManager;
     api: ILegionApi;
     apiState: IApiState;

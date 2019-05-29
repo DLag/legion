@@ -24,6 +24,7 @@ export interface IButtonViewNodeProps {
   text: string;
   onClick: () => void;
   disabled?: boolean;
+  cursor?: string;
 }
 export interface IButtonViewWithIconNodeProps extends IButtonViewNodeProps {
   iconClass: string;
@@ -80,6 +81,9 @@ export class SmallButtonView extends React.Component<
     return (
       <button className={this.getStyle()}
         onClick={e => this.props.disabled ? null : this.props.onClick()}
+        style={{
+          cursor: this.props.cursor !== undefined ? this.props.cursor : 'pointer'
+        }}
         title={this.props.text}>
         <span className={'' + this.props.iconClass + ' jp-Icon jp-Icon-16 ' + style.smallButtonStyleImage}></span>
       </button>

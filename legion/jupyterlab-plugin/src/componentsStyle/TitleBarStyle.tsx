@@ -34,3 +34,8 @@ export const text = style({
     padding: '8px 8px 8px 12px',
     margin: '0px',
 });
+
+export const refreshAnimated = style({
+    "-webkit-animation": 'legion-loading-rotate-center 1s linear infinite both',
+    animation: 'legion-loading-rotate-center 1s linear infinite both'
+});

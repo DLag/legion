@@ -94,7 +94,10 @@ export class CloudWidgetView extends React.Component<
   renderDataView() {
     return (
       <div className={style.widgetPane}>
-        <TitleBarView text={'Legion cluster mode'} onRefresh={() => this.props.app.commands.execute(CommandIDs.refreshCloud)} />
+        <TitleBarView
+          text={'Legion cluster mode'}
+          onRefresh={() => this.props.app.commands.execute(CommandIDs.refreshCloud)}
+          isRefreshing={this.state.isLoading} />
         <ClusterInfoView clusterName={this.props.dataState.credentials.cluster} />
         <ListingView
           title={'Cloud trainings'}

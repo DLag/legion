@@ -99,7 +99,10 @@ export class LocalWidgetView extends React.Component<
   render() {
     return (
       <div className={style.widgetPane}>
-        <TitleBarView text={'Legion local mode'} onRefresh={() => this.props.app.commands.execute(CommandIDs.refreshLocal)} />
+        <TitleBarView
+          text={'Legion local mode'}
+          onRefresh={() => this.props.app.commands.execute(CommandIDs.refreshLocal)}
+          isRefreshing={this.state.isLoading} />
         <ListingView
           title={'Builds'}
           topButton={(

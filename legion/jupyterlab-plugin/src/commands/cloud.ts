@@ -20,6 +20,9 @@ import { CommandIDs, IAddCommandsOptions } from './base';
 import * as dialogs from '../components/dialogs';
 import * as models from '../models/cloud';
 import * as cloudDialogs from '../components/dialogs/cloud';
+import {
+    cloudModeTabStyle
+  } from '../componentsStyle/GeneralWidgetStyle';
 
 export interface ICloudScaleParameters {
 
@@ -59,6 +62,20 @@ export function addCommands(options: IAddCommandsOptions) {
                 })
 
 
+        }
+    });
+
+    //newCloudTrainingFromContextMenu
+    commands.addCommand(CommandIDs.newCloudTrainingFromContextMenu, {
+        label: 'Train model on a cloud',
+        iconClass: cloudModeTabStyle,
+        execute: () => {
+            const widget = options.tracker.currentWidget;
+            if (!widget) {
+                return;
+            }
+            const path = encodeURI(widget.selectedItems().next().path);
+            alert(path);
         }
     });
 
@@ -265,8 +282,6 @@ export function addCommands(options: IAddCommandsOptions) {
             }
         }
     });
-
-    //showIssueModelAccessToken
 
     commands.addCommand(CommandIDs.issueNewCloudAccessToken, {
         label: 'Issue token for models deployed on a cloud',

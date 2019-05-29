@@ -19,7 +19,9 @@ import * as style from '../../componentsStyle/ListingStyle';
 
 
 /** Interface for ListingView component state */
-export interface IListingViewNodeState { }
+export interface IListingViewNodeState {
+  firstLoading: boolean
+}
 
 export interface IFlexColumnParameters {
   flexGrow: number;
@@ -58,7 +60,7 @@ export class ListingView extends React.Component<
   constructor(props: IListingViewNodeProps) {
     super(props);
     this.state = {
-
+      firstLoading: true
     };
   }
 
@@ -107,8 +109,16 @@ export class ListingView extends React.Component<
     </div>
   }
 
+  componentDidUpdate(prevProps: IListingViewNodeProps) {
+    if (prevProps.isLoading && !this.props.isLoading){
+      this.setState({
+        firstLoading: false
+      });
+    }
+  }
+
   renderDataBlock() {
-    if (this.props.isLoading) {
+    if (this.props.isLoading && this.state.firstLoading) {
       return (
         <p className={style.listingDataLine}>Loading...</p>
       )
