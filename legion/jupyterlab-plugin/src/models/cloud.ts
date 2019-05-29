@@ -21,6 +21,7 @@ export interface ICloudTrainingRequest {
     image: string;
     vcsName: string;
     workDir: string;
+    reference: string;
 
 }
 

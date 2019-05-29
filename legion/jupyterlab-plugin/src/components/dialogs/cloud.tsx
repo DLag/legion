@@ -49,8 +49,8 @@ export function showCloudTrainInformationDialog(training: model.ICloudTrainingRe
           <p className={style.fieldTextStyle}>unknown</p>
         )}
 
-        <h3 className={style.fieldLabelStyle}>VCS (source codes repository)</h3>
-        <p className={style.fieldTextStyle}>{training.spec.vcsName}</p>
+        <h3 className={style.fieldLabelStyle}>VCS</h3>
+        <p className={style.fieldTextStyle}>{training.spec.vcsName}:{training.spec.reference}</p>
         <h3 className={style.fieldLabelStyle}>File (working directory)</h3>
         <p className={style.fieldTextStyle}>{training.spec.entrypoint} {training.spec.workDir.length > 0 ? `(${training.spec.workDir})` : ''}</p>
       </div>
@@ -161,6 +161,7 @@ export interface ICreateNewTrainingDialogValues {
   image?: string;
   vcsName?: string;
   workDir?: string;
+  reference?: string;
 
   isFinished: boolean;
 }
@@ -178,6 +179,7 @@ class CreateNewTrainingDialog extends Widget {
     const entrypointInput = inputs[1] as HTMLInputElement;
     const imageInput = inputs[2] as HTMLInputElement;
     const workDirInput = inputs[3] as HTMLInputElement;
+    const referenceInput = inputs[4] as HTMLInputElement;
 
     const toolchainSelect = selects[0] as HTMLSelectElement;
     const vcsSelect = selects[1] as HTMLSelectElement;
@@ -189,6 +191,7 @@ class CreateNewTrainingDialog extends Widget {
       image: imageInput.value,
       vcsName: vcsSelect.selectedIndex >= 0 ? vcsSelect.options[vcsSelect.selectedIndex].value : '',
       workDir: workDirInput.value,
+      reference: referenceInput.value,
       isFinished: null
     };
 
@@ -258,6 +261,8 @@ namespace Private {
     })));
     body.appendChild(base.createDialogInputLabel('Custom working directory'));
     body.appendChild(base.createDialogInput(defaultValues.workDir));
+    body.appendChild(base.createDialogInputLabel('Source code version (override)'));
+    body.appendChild(base.createDialogInput(defaultValues.reference));
     return body;
   }
 }
