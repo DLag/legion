@@ -130,7 +130,7 @@ def create(args: argparse.Namespace):
         annotations=args.annotations,
         replicas=args.replicas,
         liveness_probe_initial_delay=args.livenesstimeout,
-        readiness_probeInitial_delay=args.readinesstimeout
+        readiness_probe_initial_delay=args.readinesstimeout
     ))
 
     wait_operation_finish(args, md_client)
@@ -156,7 +156,7 @@ def edit(args: argparse.Namespace):
         annotations=args.arg,
         replicas=args.replicas,
         liveness_probe_initial_delay=args.livenesstimeout,
-        readiness_probeInitial_delay=args.readinesstimeout
+        readiness_probe_initial_delay=args.readinesstimeout
     ))
 
     print(message)

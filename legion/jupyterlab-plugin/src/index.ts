@@ -179,7 +179,7 @@ function buildTopMenuItems(commands: CommandRegistry): Menu {
     }
   );
 
-  [CommandIDs.refreshCloud, CommandIDs.authorizeOnCluster, CommandIDs.unAuthorizeOnCluster].forEach(
+  [CommandIDs.refreshCloud, CommandIDs.authorizeOnCluster, CommandIDs.unAuthorizeOnCluster, CommandIDs.issueNewCloudAccessToken].forEach(
     command => {
       cloud.addItem({ command });
     }

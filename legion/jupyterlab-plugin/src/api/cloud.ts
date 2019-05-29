@@ -23,6 +23,7 @@ export namespace URLs {
     export const cloudDeploymentsUrl = legionApiRootURL + '/cloud/deployments';
     export const cloudDeploymentsScaleUrl = legionApiRootURL + '/cloud/deployments/scale';
     export const cloudAllDataUrl = legionApiRootURL + '/cloud';
+    export const cloudAIssueModelTokenUrl = legionApiRootURL + '/cloud/security/token';
 }
 
 export interface ICloudApi {
@@ -38,6 +39,9 @@ export interface ICloudApi {
 
     // Aggregated
     getCloudAllEntities: (credentials: ICloudCredentials) => Promise<models.ICloudAllEntitiesResponse>,
+
+    // Issue model JWT token
+    issueCloudAccess: (request: models.ICloudIssueTokenRequest, credentials: ICloudCredentials) => Promise<string>,
 }
 
 export class CloudApi implements IApiGroup, ICloudApi {
@@ -121,6 +125,18 @@ export class CloudApi implements IApiGroup, ICloudApi {
     async getCloudAllEntities(credentials: ICloudCredentials): Promise<models.ICloudAllEntitiesResponse> {
         try {
             let response = await httpRequest(URLs.cloudAllDataUrl, 'GET', null, credentials);
+            if (response.status !== 200) {
+                const data = await response.json();
+                throw new ServerConnection.ResponseError(response, data.message);
+            }
+            return response.json();
+        } catch (err) {
+            throw new ServerConnection.NetworkError(err);
+        }
+    }
+    async issueCloudAccess(request: models.ICloudIssueTokenRequest, credentials: ICloudCredentials): Promise<string> {
+        try {
+            let response = await httpRequest(URLs.cloudAIssueModelTokenUrl, 'POST', request, credentials);
             if (response.status !== 200) {
                 const data = await response.json();
                 throw new ServerConnection.ResponseError(response, data.message);

@@ -203,4 +203,42 @@ export function addCommands(options: IAddCommandsOptions) {
         }
     });
 
+    //showIssueModelAccessToken
+
+    commands.addCommand(CommandIDs.issueNewCloudAccessToken, {
+        label: 'Issue token for models deployed on a cloud',
+        caption: 'Create new JWT token',
+        execute: args => {
+            try {
+                const modelID = args['modelID'] as string;
+                const modelVersion = args['modelVersion'] as string;
+                if (modelID) {
+                    let splashScreen = options.splash.show();
+                    options.api.cloud.issueCloudAccess({
+                        modelID,
+                        modelVersion
+                    }, options.apiState.credentials).then(token => {
+                        splashScreen.dispose();
+                        showDialog({
+                            title: `Generated token`,
+                            body: token,
+                            buttons: [Dialog.okButton({ label: 'OK' })]
+                        })
+                    }).catch(err => {
+                        splashScreen.dispose();
+                        showErrorMessage('Can not remove issue cloud access token', err);
+                    });
+                } else {
+                    cloudDialogs.showIssueModelAccessToken()
+                        .then(({ value }) => commands.execute(CommandIDs.issueNewCloudAccessToken, {
+                            modelID: value.modelId,
+                            modelVersion: value.modelVersion,
+                        }));
+                }
+            } catch (err) {
+                showErrorMessage('Can not remove cloud deployment', err);
+            }
+        }
+    });
+
 }

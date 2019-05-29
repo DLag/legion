@@ -47,6 +47,7 @@ export namespace CommandIDs {
     export const newCloudDeployment = 'legion:cloud-deployment-new';
     export const scaleCloudDeployment = 'legion:cloud-deployment-scale';
     export const removeCloudDeployment = 'legion:cloud-deployment-remove';
+    export const issueNewCloudAccessToken = 'legion:cloud-issue-new-token';
 
     // Settings
     export const refreshLocal = 'legion:refresh-local-mode';
@@ -68,6 +69,7 @@ export namespace CommandIDs {
         // Cloud
         scaleCloudDeployment,
         removeCloudDeployment,
+        issueNewCloudAccessToken,
 
         // Settings
         refreshLocal,

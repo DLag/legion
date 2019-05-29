@@ -72,3 +72,8 @@ class DeploymentCreateRequest(BaseModel):
 class ScaleRequest(BaseModel):
     name: str
     newScale: int
+
+
+class IssueTokenRequest(BaseModel):
+    model_id: str
+    model_version: str

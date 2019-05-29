@@ -17,7 +17,7 @@ import functools
 
 from tornado.web import HTTPError
 
-from legion.sdk.clients.edi import EDIConnectionException, IncorrectAuthorizationToken
+from legion.sdk.clients.edi import EDIConnectionException, IncorrectAuthorizationToken, RemoteEdiClient
 from legion.sdk.clients.training import ModelTrainingClient, ModelTraining
 from legion.sdk.clients.deployment import ModelDeploymentClient, ModelDeployment
 from legion.sdk.clients.vcs import VcsClient, VCSCredential
@@ -214,6 +214,27 @@ class CloudDeploymentsScaleHandler(BaseCloudLegionHandler):
             client = self.build_cloud_client(ModelDeploymentClient)
             client.scale(data.name, data.newScale)
             self.finish_with_json()
+        except Exception as query_exception:
+            raise HTTPError(log_message='Can not query cloud deployments') from query_exception
+
+
+class CloudTokenIssueHandler(BaseCloudLegionHandler):
+    """
+    This handler controls issuing new tokens
+    """
+
+    @_decorate_handler_for_exception
+    def post(self):
+        """
+        Issue new token
+        :return: None
+        """
+        data = IssueTokenRequest(**self.get_json_body())
+
+        try:
+            client = self.build_cloud_client(RemoteEdiClient)
+            token = client.get_token(data.model_id, data.model_version)
+            self.finish_with_json({'token': token})
         except Exception as query_exception:
             raise HTTPError(log_message='Can not query cloud deployments') from query_exception
 

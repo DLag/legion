@@ -102,3 +102,8 @@ export interface ICloudAllEntitiesResponse {
     deployments: Array<ICloudDeploymentResponse>,
     vcss: Array<IVCSResponse>
 }
+
+export interface ICloudIssueTokenRequest {
+    modelID: string;
+    modelVersion: string;
+}

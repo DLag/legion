@@ -34,10 +34,20 @@ export function showCloudTrainInformationDialog(training: model.ICloudTrainingRe
         <p className={style.fieldTextStyle}>{training.name}</p>
         <h3 className={style.fieldLabelStyle}>State</h3>
         <p className={style.fieldTextStyle}>{training.status.state}</p>
+        {training.status.modelImage.length > 0 ? (<React.Fragment>
+          <h3 className={style.fieldLabelStyle}>Image (toolchain)</h3>
+          <p className={style.fieldTextStyle}>{training.status.modelImage} ({training.spec.toolchain})</p>
+        </React.Fragment>) : (<React.Fragment>
+          <h3 className={style.fieldLabelStyle}>Toolchain</h3>
+          <p className={style.fieldTextStyle}>{training.spec.toolchain}</p>
+        </React.Fragment>)}
         <h3 className={style.fieldLabelStyle}>Model (id / version)</h3>
-        <p className={style.fieldTextStyle}>{training.status.id} / {training.status.version}</p>
-        <h3 className={style.fieldLabelStyle}>Image (toolchain)</h3>
-        <p className={style.fieldTextStyle}>{training.status.modelImage} ({training.spec.toolchain})</p>
+        {training.status.id.length > 0 ? (
+          <p className={style.fieldTextStyle}>{training.status.id} / {training.status.version}</p>
+        ) : (
+          <p className={style.fieldTextStyle}>unknown</p>
+        )}
+
         <h3 className={style.fieldLabelStyle}>VCS (source codes repository)</h3>
         <p className={style.fieldTextStyle}>{training.spec.vcsName}</p>
         <h3 className={style.fieldLabelStyle}>File (working directory)</h3>
@@ -109,6 +119,39 @@ export function showCreateNewDeploymentDetails(deploymentImage: string) {
   })
 }
 
+export interface IIssueModelAccessTokenDialogValues {
+  modelId: string;
+  modelVersion: string;
+}
+
+class IssueModelAccessTokenDialog extends Widget {
+  constructor() {
+    super({ node: Private.buildIssueModelAccessTokenDialog() });
+  }
+
+  getValue(): IIssueModelAccessTokenDialogValues {
+    let inputs = this.node.getElementsByTagName('input');
+    const modelIDInput = inputs[0] as HTMLInputElement;
+    const modelVersionInput = inputs[1] as HTMLInputElement;
+
+    return {
+      modelId: modelIDInput.value,
+      modelVersion: modelVersionInput.value
+    };
+  }
+}
+
+export function showIssueModelAccessToken() {
+  return showDialog({
+    title: 'Creation of cloud access token',
+    body: new IssueModelAccessTokenDialog(),
+    buttons: [
+      Dialog.cancelButton(),
+      Dialog.okButton({ label: 'Get token' })
+    ]
+  })
+}
+
 namespace Private {
   export function buildCreateNewDeploymentDetailsDialog(deploymentImage: string) {
     let body = base.createDialogBody();
@@ -117,6 +160,14 @@ namespace Private {
     body.appendChild(base.createDialogInput(undefined, 'name of deployment'))
     body.appendChild(base.createDialogInputLabel('Count of replicas'))
     body.appendChild(base.createDialogInput('1'))
+    return body;
+  }
+  export function buildIssueModelAccessTokenDialog() {
+    let body = base.createDialogBody();
+    body.appendChild(base.createDialogInputLabel('Model ID'))
+    body.appendChild(base.createDialogInput())
+    body.appendChild(base.createDialogInputLabel('Model version'))
+    body.appendChild(base.createDialogInput())
     return body;
   }
 }
