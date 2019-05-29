@@ -215,13 +215,13 @@ export function addCommands(options: IAddCommandsOptions) {
                 if (modelID) {
                     let splashScreen = options.splash.show();
                     options.api.cloud.issueCloudAccess({
-                        modelID,
-                        modelVersion
-                    }, options.apiState.credentials).then(token => {
+                        model_id: modelID,
+                        model_version: modelVersion
+                    }, options.apiState.credentials).then(response => {
                         splashScreen.dispose();
                         showDialog({
                             title: `Generated token`,
-                            body: token,
+                            body: response.token,
                             buttons: [Dialog.okButton({ label: 'OK' })]
                         })
                     }).catch(err => {

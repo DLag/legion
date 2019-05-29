@@ -41,7 +41,7 @@ export interface ICloudApi {
     getCloudAllEntities: (credentials: ICloudCredentials) => Promise<models.ICloudAllEntitiesResponse>,
 
     // Issue model JWT token
-    issueCloudAccess: (request: models.ICloudIssueTokenRequest, credentials: ICloudCredentials) => Promise<string>,
+    issueCloudAccess: (request: models.ICloudIssueTokenRequest, credentials: ICloudCredentials) => Promise<models.ICloudIssueTokenResponse>,
 }
 
 export class CloudApi implements IApiGroup, ICloudApi {
@@ -134,7 +134,7 @@ export class CloudApi implements IApiGroup, ICloudApi {
             throw new ServerConnection.NetworkError(err);
         }
     }
-    async issueCloudAccess(request: models.ICloudIssueTokenRequest, credentials: ICloudCredentials): Promise<string> {
+    async issueCloudAccess(request: models.ICloudIssueTokenRequest, credentials: ICloudCredentials): Promise<models.ICloudIssueTokenResponse> {
         try {
             let response = await httpRequest(URLs.cloudAIssueModelTokenUrl, 'POST', request, credentials);
             if (response.status !== 200) {

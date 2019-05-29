@@ -104,6 +104,11 @@ export interface ICloudAllEntitiesResponse {
 }
 
 export interface ICloudIssueTokenRequest {
-    modelID: string;
-    modelVersion: string;
+    model_id: string;
+    model_version: string;
 }
+
+export interface ICloudIssueTokenResponse {
+    token: string;  //+safeToCommit
+}
+
