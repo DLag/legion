@@ -247,7 +247,7 @@ namespace Private {
         text: 'Jupyter (for *.ipynb files)',
         value: 'jupyter',
       }
-    ]));
+    ], defaultValues.toolchain));
     body.appendChild(base.createDialogInputLabel('Entry point (main train file)'));
     body.appendChild(base.createDialogInput(defaultValues.entrypoint));
     body.appendChild(base.createDialogInputLabel('Custom train image (toolchain\'s by default)'));
@@ -258,7 +258,7 @@ namespace Private {
         text: `${vcs.name} (${vcs.spec.uri}, ref: ${vcs.spec.defaultReference})`,
         value: vcs.name
       }
-    })));
+    }), defaultValues.vcsName));
     body.appendChild(base.createDialogInputLabel('Custom working directory'));
     body.appendChild(base.createDialogInput(defaultValues.workDir));
     body.appendChild(base.createDialogInputLabel('Source code version (override)'));

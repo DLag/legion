@@ -13,7 +13,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
+import os
 import functools
+from subprocess import Popen, PIPE, check_output, CalledProcessError
 
 from tornado.web import HTTPError
 
@@ -44,6 +46,69 @@ def _decorate_handler_for_exception(function):
         except EDIConnectionException as base_exception:
             raise HTTPError(log_message=str(base_exception)) from base_exception
     return wrapper
+
+
+def _is_git_cli_present() -> bool:
+    try:
+        check_output(
+            ['git', '--version']
+        )
+    except CalledProcessError:
+        return False
+    return True
+
+
+def _get_git_command_output(path: str, command: typing.List[str]) -> typing.Optional[str]:
+    p = Popen(
+        command,
+        stdout=PIPE,
+        stderr=PIPE,
+        cwd=os.path.dirname(path),
+    )
+    output, _ = p.communicate()
+    if p.returncode == 0:
+        return output.decode('utf-8').strip().strip('\n')
+    return None
+
+
+def _get_file_path_in_repo(path: str) -> typing.Optional[str]:
+    relative_dir = _get_git_command_output(path, ['git', 'rev-parse', '--show-prefix'])
+    _, filename = os.path.split(path)
+
+    if relative_dir:
+        return os.path.join(relative_dir, filename)
+
+    return None
+
+
+def _get_file_remote_references(path: str) -> typing.List[str]:
+    refs = []
+
+    current_branch = _get_git_command_output(path, ['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+    if current_branch:
+        command = ['git', 'rev-parse', '--abbrev-ref', '{}@{{upstream}}'.format(current_branch)]
+        current_branch_upstream = _get_git_command_output(path, command)
+        if current_branch_upstream:
+            refs.append(current_branch_upstream)
+
+    current_commit = _get_git_command_output(path, ['git', 'rev-parse', 'HEAD'])
+    if current_commit:
+        refs.append(current_commit)
+
+    return refs
+
+
+def _get_remotes(path: str) -> typing.List[str]:
+    remotes = []
+
+    name_of_remotes = _get_git_command_output(path, ['git', 'remote'])
+    if name_of_remotes:
+        for remote_name in name_of_remotes.split('\n'):
+            url = _get_git_command_output(path, ['git', 'remote', 'get-url', remote_name])
+            if url:
+                remotes.append(url)
+
+    return remotes
 
 
 class BaseCloudLegionHandler(BaseLegionHandler):
@@ -237,6 +302,57 @@ class CloudTokenIssueHandler(BaseCloudLegionHandler):
             self.finish_with_json({'token': token})
         except Exception as query_exception:
             raise HTTPError(log_message='Can not query cloud deployments') from query_exception
+
+
+class CloudTrainingsFromFileHandler(BaseCloudLegionHandler):
+    """
+    This handler gets information about file (path from vcs, extension and etc.)
+    """
+
+    @_decorate_handler_for_exception
+    def post(self):
+        """
+        Get file information
+        :return: None
+        """
+        data = FileInformationRequest(**self.get_json_body())
+
+        try:
+            path = data.path
+            dir_name = os.path.dirname(path)
+            _, extension = os.path.splitext(path)
+
+            git_present = _is_git_cli_present()
+            if not git_present:
+                self.finish_with_json(FileInformationResponse(
+                    path=path,
+                    workDir=dir_name,
+                    extension=extension
+                ).to_json())
+                return
+
+            file_path_in_repo = _get_file_path_in_repo(path)
+            if not file_path_in_repo:
+                self.finish_with_json(FileInformationResponse(
+                    path=path,
+                    workDir=dir_name,
+                    extension=extension,
+                    gitCommandAvailable=True
+                ).to_json())
+                return
+            dir_name_in_repo = os.path.dirname(file_path_in_repo)
+
+            self.finish_with_json(FileInformationResponse(
+                path=file_path_in_repo,
+                workDir=dir_name_in_repo,
+                extension=extension,
+                gitCommandAvailable=True,
+                fileInGitRepository=True,
+                references=_get_file_remote_references(path),
+                remotes=_get_remotes(path)
+            ).to_json())
+        except Exception as query_exception:
+            raise HTTPError(log_message='Can not get file information') from query_exception
 
 
 class CloudAllEntitiesHandler(BaseCloudLegionHandler):

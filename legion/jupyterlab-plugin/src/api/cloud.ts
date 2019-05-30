@@ -23,7 +23,8 @@ export namespace URLs {
     export const cloudDeploymentsUrl = legionApiRootURL + '/cloud/deployments';
     export const cloudDeploymentsScaleUrl = legionApiRootURL + '/cloud/deployments/scale';
     export const cloudAllDataUrl = legionApiRootURL + '/cloud';
-    export const cloudAIssueModelTokenUrl = legionApiRootURL + '/cloud/security/token';
+    export const cloudIssueModelTokenUrl = legionApiRootURL + '/cloud/security/token';
+    export const cloudGetLocalFileInformation = legionApiRootURL + '/cloud/local-file';
 }
 
 export interface ICloudApi {
@@ -43,6 +44,9 @@ export interface ICloudApi {
 
     // Issue model JWT token
     issueCloudAccess: (request: models.ICloudIssueTokenRequest, credentials: ICloudCredentials) => Promise<models.ICloudIssueTokenResponse>,
+
+    // Get file information
+    getLocalFileInformation: (request: models.ILocalFileInformationRequest) => Promise<models.ILocalFileInformationResponse>,
 }
 
 export class CloudApi implements IApiGroup, ICloudApi {
@@ -149,7 +153,19 @@ export class CloudApi implements IApiGroup, ICloudApi {
     }
     async issueCloudAccess(request: models.ICloudIssueTokenRequest, credentials: ICloudCredentials): Promise<models.ICloudIssueTokenResponse> {
         try {
-            let response = await httpRequest(URLs.cloudAIssueModelTokenUrl, 'POST', request, credentials);
+            let response = await httpRequest(URLs.cloudIssueModelTokenUrl, 'POST', request, credentials);
+            if (response.status !== 200) {
+                const data = await response.json();
+                throw new ServerConnection.ResponseError(response, data.message);
+            }
+            return response.json();
+        } catch (err) {
+            throw new ServerConnection.NetworkError(err);
+        }
+    }
+    async getLocalFileInformation(request: models.ILocalFileInformationRequest): Promise<models.ILocalFileInformationResponse> {
+        try {
+            let response = await httpRequest(URLs.cloudGetLocalFileInformation, 'POST', request);
             if (response.status !== 200) {
                 const data = await response.json();
                 throw new ServerConnection.ResponseError(response, data.message);

@@ -75,7 +75,30 @@ export function addCommands(options: IAddCommandsOptions) {
                 return;
             }
             const path = encodeURI(widget.selectedItems().next().path);
-            alert(path);
+
+            let splashScreen = options.splash.show();
+            options.api.cloud.getLocalFileInformation({path}).then(response => {
+                let toolchain = undefined;
+                if (response.extension == '.py') {
+                    toolchain = 'python';
+                } else if (response.extension == '.ipynb'){
+                    toolchain = 'jupyter';
+                }
+
+                let value: cloudDialogs.ICreateNewTrainingDialogValues = {
+                    entrypoint: response.path,
+                    workDir: response.workDir,
+                    toolchain,
+                    reference: response.references.length > 0 ? response.references[0] : undefined,
+                    isFinished: false
+                };
+
+                splashScreen.dispose();
+                commands.execute(CommandIDs.newCloudTraining, (value as unknown) as ReadonlyJSONObject);
+            }).catch(err => {
+                splashScreen.dispose();
+                showErrorMessage('Can not get information about file', err);
+            })
         }
     });
 

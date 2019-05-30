@@ -24,6 +24,31 @@ class BasicNameRequest(BaseModel):
     name: str
 
 
+class FileInformationRequest(BaseModel):
+    path: str
+
+
+class FileInformationResponse(BaseModel):
+    path: str
+    workDir: str
+    extension: str
+    gitCommandAvailable: bool = False
+    fileInGitRepository: bool = False
+    remotes: typing.List[str] = []
+    references: typing.List[str] = []
+
+    def to_json(self):
+        return {
+            'path': self.path,
+            'workDir': self.workDir,
+            'extension': self.extension,
+            'gitCommandAvailable': self.gitCommandAvailable,
+            'fileInGitRepository': self.fileInGitRepository,
+            'remotes': self.remotes,
+            'references': self.references,
+        }
+
+
 class TrainingCreateRequest(BaseModel):
     name: str
     entrypoint: str

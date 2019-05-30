@@ -123,3 +123,17 @@ export interface ICloudIssueTokenResponse {
     token: string;  //+safeToCommit
 }
 
+export interface ILocalFileInformationRequest {
+    path: string;
+
+}
+
+export interface ILocalFileInformationResponse {
+    path: string
+    workDir: string
+    extension: string
+    gitCommandAvailable: boolean;
+    fileInGitRepository: boolean;
+    remotes: Array<string>;
+    references: Array<string>;
+}

@@ -135,13 +135,16 @@ export function createDialogInput(defaultValue?: string, placeholder?: string): 
     return input;
 }
 
-export function createSelect(variants: Array<IChooseVariant>): HTMLSelectElement {
+export function createSelect(variants: Array<IChooseVariant>, selectedOptionValue?: string): HTMLSelectElement {
     let select = document.createElement('select');
     select.className = `${style.inputFieldStyle}`;
     variants.forEach(item => {
         var option = document.createElement("option");
         option.value = item.value;
         option.text = item.text;
+        if (option.value == selectedOptionValue && selectedOptionValue !== undefined){
+            option.selected = true;
+        }
         select.appendChild(option);
     });
     return select;
