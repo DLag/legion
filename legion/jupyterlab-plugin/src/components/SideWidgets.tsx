@@ -25,7 +25,6 @@ import { Widget } from '@phosphor/widgets';
 
 import { LocalWidgetView } from './LocalWidgetView';
 import { CloudWidgetView } from './CloudWidgetView';
-import { IApiState } from '../models';
 
 
 /**
@@ -46,7 +45,7 @@ export interface IOptions {
   /**
    * Current data state
    */
-  state: IApiState;
+  state: any;
 }
 
 export interface IExtendedOptions extends IOptions {

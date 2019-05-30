@@ -25,7 +25,7 @@ import { SmallButtonView } from './partials/ButtonView';
 import * as style from '../componentsStyle/GeneralWidgetStyle';
 import * as dialog from '../components/dialogs/local';
 import { CommandIDs } from '../commands';
-import { IApiState } from '../models';
+import { IApiLocalState } from '../models';
 import { ILocalAllEntitiesResponse } from '../models/local';
 
 
@@ -39,7 +39,7 @@ export interface ILocalWidgetViewNodeState {
 /** Interface for GitPanel component props */
 export interface ILocalWidgetViewNodeProps {
   app: JupyterLab;
-  dataState: IApiState;
+  dataState: IApiLocalState;
 }
 
 /** A React component for the git extension's main display */
@@ -53,18 +53,18 @@ export class LocalWidgetView extends React.Component<
   constructor(props: ILocalWidgetViewNodeProps) {
     super(props);
     this.state = {
-      localData: props.dataState.local,
-      buildingInProcess: props.dataState.local.buildStatus.started && !props.dataState.local.buildStatus.finished,
-      isLoading: false
+      localData: props.dataState,
+      buildingInProcess: props.dataState.buildStatus.started && !props.dataState.buildStatus.finished,
+      isLoading: props.dataState.isLoading
     };
   }
 
   refresh = async () => {
     try {
       this.setState({
-        localData: this.props.dataState.local,
-        buildingInProcess: this.props.dataState.local.buildStatus.started && !this.props.dataState.local.buildStatus.finished,
-        isLoading: this.props.dataState.localIsLoading
+        localData: this.props.dataState,
+        buildingInProcess: this.props.dataState.buildStatus.started && !this.props.dataState.buildStatus.finished,
+        isLoading: this.props.dataState.isLoading
       });
     } catch (err) {
       showErrorMessage('Can not update local widget', err);

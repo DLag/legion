@@ -18,8 +18,8 @@ import {
   JupyterLab,
   JupyterLabPlugin
 } from '@jupyterlab/application';
-import { ICommandPalette, ISplashScreen } from "@jupyterlab/apputils";
-import { ISettingRegistry, IStateDB } from "@jupyterlab/coreutils";
+import { ISplashScreen } from "@jupyterlab/apputils";
+import { IStateDB } from "@jupyterlab/coreutils";
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import {
   IFileBrowserFactory
@@ -41,9 +41,15 @@ import { createLocalSidebarWidget, createCloudSidebarWidget, LegionSideWidget } 
 import { addCommands, CommandIDs } from './commands';
 
 import { LegionApi } from './api';
-import { IApiState, buildInitialAPIState } from './models/apiState';
+import {
+  IApiLocalState, IApiCloudState,
+  buildInitialLocalAPIState, buildInitialCloudAPIState
+} from './models/apiState';
+import { ILegionPluginMode } from './models/core';
 
 export const PLUGIN_ID = 'jupyter.extensions.legion';
+export const PLUGIN_ID_CLOUD = PLUGIN_ID + ':cloud';
+export const PLUGIN_ID_LOCAL = PLUGIN_ID + ':local';
 export const EXTENSION_ID = 'jupyter.extensions.jupyter_legion';
 
 const FILE_MANAGER_NOT_DIRECTORY = '.jp-DirListing-item[data-isdir="false"]';
@@ -56,43 +62,48 @@ export const ILegionExtension = new Token<ILegionExtension>(EXTENSION_ID);
 export interface ILegionExtension {
 }
 
+const pluginRequirements = [
+  IMainMenu,
+  ILayoutRestorer,
+  ISplashScreen,
+  IStateDB,
+  IFileBrowserFactory
+];
+
+
 /**
- * Plugin declaration
+ * Plugins declarations
  */
-const plugin: JupyterLabPlugin<ILegionExtension> = {
-  id: PLUGIN_ID,
-  requires: [
-    IMainMenu,
-    ILayoutRestorer,
-    ICommandPalette,
-    ISettingRegistry,
-    ISplashScreen,
-    IStateDB,
-    IFileBrowserFactory
-  ],
+const cloudPlugin: JupyterLabPlugin<ILegionExtension> = {
+  id: PLUGIN_ID_CLOUD,
+  requires: pluginRequirements,
   provides: ILegionExtension,
-  activate,
+  activate: buildActivator(ILegionPluginMode.CLOUD),
+  autoStart: true
+};
+
+const localPlugin: JupyterLabPlugin<ILegionExtension> = {
+  id: PLUGIN_ID_LOCAL,
+  requires: pluginRequirements,
+  provides: ILegionExtension,
+  activate: buildActivator(ILegionPluginMode.LOCAL),
   autoStart: true
 };
 
 /**
- * Export the plugin as default.
+ * Export the plugins as default.
  */
-export default plugin;
+const plugins: JupyterLabPlugin<any>[] = [cloudPlugin, localPlugin];
+export default plugins;
 
 /**
- * Declare extension
+ * Declare extension constructor
  */
 export class LegionExtension implements ILegionExtension {
   /**
-   * Instance of Legion Widget for local mode
+   * Instance of Legion Widget for appropriate mode
    */
-  localTabWidget: LegionSideWidget;
-
-  /**
-   * Instance of Legion Widget for cloud mode
-   */
-  cloudTabWidget: LegionSideWidget;
+  sideWidget: LegionSideWidget;
 
   /**
    * API to back-end
@@ -102,9 +113,15 @@ export class LegionExtension implements ILegionExtension {
   /**
    * API state
    */
-  apiState: IApiState;
+  apiLocalState?: IApiLocalState;
+  apiCloudState?: IApiCloudState;
 
   localBuildStatusTimer: number;
+
+  /**
+   * Is it cloud plugin (otherwise local)
+   */
+  mode: ILegionPluginMode;
 
   /**
    * Construct extension
@@ -114,92 +131,65 @@ export class LegionExtension implements ILegionExtension {
   constructor(
     app: JupyterLab,
     restorer: ILayoutRestorer,
-    state: IStateDB
+    state: IStateDB,
+    mode: ILegionPluginMode
   ) {
-    //this.app = app;
+    this.mode = mode;
+
     this.api = new LegionApi();
-    this.apiState = buildInitialAPIState(state);
 
-    if (true) {
-      this.localTabWidget = createLocalSidebarWidget(
+    if (this.mode == ILegionPluginMode.CLOUD) {
+      this.apiCloudState = buildInitialCloudAPIState(state);
+      this.sideWidget = createCloudSidebarWidget(
         app,
-        { manager: app.serviceManager, state: this.apiState }
+        { manager: app.serviceManager, state: this.apiCloudState }
       );
-      this.localTabWidget.id = 'legion-local-sessions-widget';
-      this.localTabWidget.title.iconClass = `jp-SideBar-tabIcon ${localModeTabStyle}`;
-      this.localTabWidget.title.caption = 'Legion local mode';
+      this.sideWidget.id = 'legion-cloud-sessions-widget';
+      this.sideWidget.title.iconClass = `jp-SideBar-tabIcon ${cloudModeTabStyle}`;
+      this.sideWidget.title.caption = 'Legion cloud mode';
 
-      this.apiState.onLocalDataChanged.connect(_ => this.localTabWidget.refresh());
+      this.apiCloudState.onDataChanged.connect(_ => this.sideWidget.refresh());
 
-      restorer.add(this.localTabWidget, 'legion-local-sessions');
-      app.shell.addToLeftArea(this.localTabWidget, { rank: 200 });
+      restorer.add(this.sideWidget, 'legion-cloud-sessions');
+      app.shell.addToLeftArea(this.sideWidget, { rank: 210 });
+
+      app.restored.then(() => {
+        this.apiCloudState.tryToLoadCredentialsFromSettings();
+      });
+    } else {
+      this.apiLocalState = buildInitialLocalAPIState();
+      this.sideWidget = createLocalSidebarWidget(
+        app,
+        { manager: app.serviceManager, state: this.apiLocalState }
+      );
+      this.sideWidget.id = 'legion-local-sessions-widget';
+      this.sideWidget.title.iconClass = `jp-SideBar-tabIcon ${localModeTabStyle}`;
+      this.sideWidget.title.caption = 'Legion local mode';
+
+      this.apiLocalState.onDataChanged.connect(_ => this.sideWidget.refresh());
+
+      restorer.add(this.sideWidget, 'legion-local-sessions');
+      app.shell.addToLeftArea(this.sideWidget, { rank: 200 });
 
       app.restored.then(() => {
         this.localBuildStatusTimer = setInterval(() => app.commands.execute(CommandIDs.refreshLocalBuildStatus), 1000);
       });
     }
 
-
-    if (true) {
-      this.cloudTabWidget = createCloudSidebarWidget(
-        app,
-        { manager: app.serviceManager, state: this.apiState }
-      );
-      this.cloudTabWidget.id = 'legion-cloud-sessions-widget';
-      this.cloudTabWidget.title.iconClass = `jp-SideBar-tabIcon ${cloudModeTabStyle}`;
-      this.cloudTabWidget.title.caption = 'Legion cloud mode';
-
-      this.apiState.onCloudDataChanged.connect(_ => this.cloudTabWidget.refresh());
-
-      restorer.add(this.cloudTabWidget, 'legion-cloud-sessions');
-      app.shell.addToLeftArea(this.cloudTabWidget, { rank: 210 });
-
-      app.restored.then(() => {
-        this.apiState.tryToLoadCredentialsFromSettings();
-      });
-    }
-
-
   }
 }
 
-function buildTopMenuItems(commands: CommandRegistry): Menu {
+function buildTopMenu(commands: CommandRegistry, mode: ILegionPluginMode): Menu {
   let menu = new Menu({ commands });
-  menu.title.label = 'Legion';
+  menu.title.label = mode == ILegionPluginMode.CLOUD ? 'Legion cloud' : 'Legion local';
 
-  let cloud = new Menu({ commands });
-  cloud.title.label = 'Cloud ';
-  menu.addItem({ type: 'submenu', submenu: cloud });
+  const commandsToAdd = (mode == ILegionPluginMode.CLOUD) ?
+    [CommandIDs.refreshCloud, CommandIDs.authorizeOnCluster, CommandIDs.unAuthorizeOnCluster, CommandIDs.issueNewCloudAccessToken] :
+    [CommandIDs.refreshLocal, CommandIDs.newLocalBuild, CommandIDs.refreshLocalBuildStatus, CommandIDs.openLocalMetrics];
 
-  let help = new Menu({ commands });
-  help.title.label = 'Help ';
-  menu.addItem({ type: 'submenu', submenu: help });
-
-  let local = new Menu({ commands });
-  local.title.label = 'Local ';
-  menu.addItem({ type: 'submenu', submenu: local });
-
-  [CommandIDs.openLocalModelPlugin, CommandIDs.openCloudModelPlugin, CommandIDs.openLocalMetrics].forEach(
+  commandsToAdd.forEach(
     command => {
       menu.addItem({ command });
-    }
-  );
-
-  [CommandIDs.refreshCloud, CommandIDs.authorizeOnCluster, CommandIDs.unAuthorizeOnCluster, CommandIDs.issueNewCloudAccessToken].forEach(
-    command => {
-      cloud.addItem({ command });
-    }
-  );
-
-  [CommandIDs.mainRepository].forEach(
-    command => {
-      help.addItem({ command });
-    }
-  );
-
-  [CommandIDs.refreshLocal, CommandIDs.newLocalBuild, CommandIDs.refreshLocalBuildStatus, CommandIDs.openLocalMetrics].forEach(
-    command => {
-      local.addItem({ command });
     }
   );
 
@@ -213,33 +203,47 @@ function activate(
   app: JupyterLab,
   mainMenu: IMainMenu,
   restorer: ILayoutRestorer,
-  palette: ICommandPalette,
-  settings: ISettingRegistry,
   splash: ISplashScreen,
   state: IStateDB,
-  factory: IFileBrowserFactory
+  factory: IFileBrowserFactory,
+  mode: ILegionPluginMode,
 ): ILegionExtension {
   // Build extension
-  let legionExtension = new LegionExtension(app, restorer, state);
-  // Register commands in application (in top menu & palette)
+  let legionExtension = new LegionExtension(app, restorer, state, mode);
 
-  addCommands(app, factory.tracker, app.serviceManager, legionExtension.apiState, legionExtension.api, splash);
+  // Build options for commands
+  const addCommandsOptions = {
+    app,
+    services: app.serviceManager,
+    apiCloudState: legionExtension.apiCloudState,
+    apiLocalState: legionExtension.apiLocalState,
+    api: legionExtension.api,
+    splash,
+    tracker: factory.tracker,
+    mode
+  };
 
-  for (let command in CommandIDs) {
-    palette.addItem({
-      command: CommandIDs[command],
-      category: "Legion commands"
+  // Register commands in JupyterLab
+  addCommands(addCommandsOptions);
+
+  // Add context menu for cloud mode
+  if (mode == ILegionPluginMode.CLOUD) {
+    app.contextMenu.addItem({
+      command: CommandIDs.newCloudTrainingFromContextMenu,
+      selector: FILE_MANAGER_NOT_DIRECTORY,
+      rank: TRAIN_ON_CLOUD_COMMAND_RANK
     });
   }
 
-  app.contextMenu.addItem({
-    command: CommandIDs.newCloudTrainingFromContextMenu,
-    selector: FILE_MANAGER_NOT_DIRECTORY,
-    rank: TRAIN_ON_CLOUD_COMMAND_RANK
-  });
-
-  let topMenuNode = buildTopMenuItems(app.commands);
-  mainMenu.addMenu(topMenuNode, { rank: 60 });
-
+  // Create top menu for appropriate mode
+  mainMenu.addMenu(buildTopMenu(app.commands, mode), { rank: 60 });
   return legionExtension;
+}
+
+/**
+ * Build activation function
+ * @param mode mode of plugin (cloud or local)
+ */
+function buildActivator(mode: ILegionPluginMode): any {
+  return (...args: any[]) => activate.call(this, ...args, mode);
 }

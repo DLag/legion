@@ -31,13 +31,13 @@ export function addCommands(options: IAddCommandsOptions) {
         caption: 'Reset currently used cluster context',
         execute: () => {
             try {
-                if (!options.apiState.credentials) {
+                if (!options.apiCloudState.credentials) {
                     showErrorMessage('Can not reset cluster authorization', 'You are not authorized on any cluster');
                 } else {
-                    dialogs.showLogoutDialog(options.apiState.credentials.cluster)
+                    dialogs.showLogoutDialog(options.apiCloudState.credentials.cluster)
                         .then(({ button }) => {
                             if (button.accept) {
-                                options.apiState.setCredentials();
+                                options.apiCloudState.setCredentials();
                             }
                         });
                 }
@@ -53,7 +53,7 @@ export function addCommands(options: IAddCommandsOptions) {
         caption: 'Authorize on Legion cluster',
         execute: () => {
             try {
-                if (!!options.apiState.credentials) {
+                if (!!options.apiCloudState.credentials) {
                     showErrorMessage('Can not authorize on a cluster', 'You are already authorized');
                 } else {
                     dialogs.showLoginDialog()
@@ -62,7 +62,7 @@ export function addCommands(options: IAddCommandsOptions) {
                                 let splashScreen = options.splash.show();
                                 options.api.cloud.getCloudAllEntities(value).then(_ => {
                                     splashScreen.dispose();
-                                    options.apiState.setCredentials(value);
+                                    options.apiCloudState.setCredentials(value);
                                     showDialog({
                                         title: 'Legion Cluster mode',
                                         body: 'You have been successfully authorized on a cluster ' + value.cluster,

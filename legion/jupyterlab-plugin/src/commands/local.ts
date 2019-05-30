@@ -83,7 +83,7 @@ export function addCommands(options: IAddCommandsOptions) {
                         'Choose image to deploy',
                         'Please choose one image from list',
                         'or type image name manually',
-                        options.apiState.local.builds.map(build => {
+                        options.apiLocalState.builds.map(build => {
                             return {
                                 value: build.imageName,
                                 text: build.imageName
@@ -131,7 +131,7 @@ export function addCommands(options: IAddCommandsOptions) {
                     dialogs.showChooseDialog(
                         'Choose deployment to remove',
                         'Please choose one deployment from list',
-                        options.apiState.local.deployments.map(deployment => {
+                        options.apiLocalState.deployments.map(deployment => {
                             return {
                                 value: deployment.name,
                                 text: deployment.name + ' on port ' + deployment.port
@@ -144,6 +144,43 @@ export function addCommands(options: IAddCommandsOptions) {
             } catch (err) {
                 showErrorMessage('Can not remove local deployment', err);
             }
+        }
+    });
+
+    commands.addCommand(CommandIDs.refreshLocal, {
+        label: 'Force data refresh for local mode',
+        caption: 'Force data synchronization for local mode',
+        execute: () => {
+            options.apiLocalState.signalLoadingStarted();
+
+            options.api.local.getLocalAllEntities().then(response => {
+                options.apiLocalState.updateAllState(response);
+            }).catch(err => {
+                options.apiLocalState.updateAllState();
+                showErrorMessage('Can not forcefully update data for local mode', err);
+            });
+        }
+    });
+
+    commands.addCommand(CommandIDs.refreshLocalBuildStatus, {
+        label: 'Force build status refresh for local mode',
+        caption: 'Force data synchronization for local mode build status',
+        execute: () => {
+            options.api.local.getLocalBuildStatus().then(response => {
+                options.apiLocalState.updateBuildState(response);
+            }).catch(err => {
+                console.warn('Can not get status of build', err);
+            });
+        }
+    });
+
+    commands.addCommand(CommandIDs.openLocalModelPlugin, {
+        label: 'Local mode interface',
+        caption: 'Go to Local mode interface',
+        execute: () => {
+            try {
+                options.app.shell.activateById('legion-local-sessions-widget');
+            } catch (err) { }
         }
     });
 

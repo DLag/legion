@@ -25,7 +25,7 @@ import { SmallButtonView, ButtonView } from './partials/ButtonView';
 import * as style from '../componentsStyle/GeneralWidgetStyle';
 import * as dialog from '../components/dialogs/cloud';
 import { CommandIDs } from '../commands';
-import { IApiState } from '../models';
+import { IApiCloudState } from '../models';
 import { ICloudAllEntitiesResponse } from '../models/cloud';
 import { ClusterInfoView } from './partials/ClusterInfoView';
 
@@ -40,7 +40,7 @@ export interface ICloudWidgetViewNodeState {
 /** Interface for GitPanel component props */
 export interface ILocalWidgetViewNodeProps {
   app: JupyterLab;
-  dataState: IApiState;
+  dataState: IApiCloudState;
 }
 
 /** A React component for the git extension's main display */
@@ -51,8 +51,8 @@ export class CloudWidgetView extends React.Component<
   constructor(props: ILocalWidgetViewNodeProps) {
     super(props);
     this.state = {
-      cloudData: props.dataState.cloud,
-      isLoading: props.dataState.cloudIsLoading,
+      cloudData: props.dataState,
+      isLoading: props.dataState.isLoading,
       credentialsIsNotEmpty: props.dataState.credentials != null
     };
   }
@@ -63,8 +63,8 @@ export class CloudWidgetView extends React.Component<
   refresh = async () => {
     try {
       this.setState({
-        cloudData: this.props.dataState.cloud,
-        isLoading: this.props.dataState.cloudIsLoading,
+        cloudData: this.props.dataState,
+        isLoading: this.props.dataState.isLoading,
         credentialsIsNotEmpty: this.props.dataState.credentials != null
       });
     } catch (err) {

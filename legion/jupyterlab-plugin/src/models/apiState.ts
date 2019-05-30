@@ -24,127 +24,143 @@ export const PLUGIN_CREDENTIALS_STORE_CLUSTER = `legion.cluster:credentials-clus
 export const PLUGIN_CREDENTIALS_STORE_TOKEN = `legion.cluster:credentials-token`;
 
 export interface IApiLocalState {
-    builds: Array<local.ILocalBuildInformation>,
-    deployments: Array<local.ILocalDeploymentInformation>,
-    buildStatus: local.ILocalBuildStatus
+    builds: Array<local.ILocalBuildInformation>;
+    deployments: Array<local.ILocalDeploymentInformation>;
+    buildStatus: local.ILocalBuildStatus;
+
+    isLoading: boolean;
+    signalLoadingStarted(): void;
+    onDataChanged: ISignal<this, void>;
+
+    updateAllState(data?: local.ILocalAllEntitiesResponse): void;
+    updateBuildState(data: local.ILocalBuildStatus): void;
 }
 
 export interface IApiCloudState {
     trainings: Array<cloud.ICloudTrainingResponse>,
     deployments: Array<cloud.ICloudDeploymentResponse>,
     vcss: Array<cloud.IVCSResponse>
-}
 
-export interface IApiState {
-    local: IApiLocalState;
-    localIsLoading: boolean;
-    signalLocalLoadingStarted(): void;
-    updateEntireLocalState(data?: local.ILocalAllEntitiesResponse): void;
-    updateLocalBuildState(data: local.ILocalBuildStatus): void;
-    onLocalDataChanged: ISignal<this, void>;
-
-    cloud: IApiCloudState;
-    cloudIsLoading: boolean;
-    signalCloudLoadingStarted(): void;
-    updateEntireCloudState(data?: cloud.ICloudAllEntitiesResponse): void;
-    onCloudDataChanged: ISignal<this, void>;
+    isLoading: boolean;
+    signalLoadingStarted(): void;
+    onDataChanged: ISignal<this, void>;
+    updateAllState(data?: cloud.ICloudAllEntitiesResponse): void;
 
     credentials: ICloudCredentials;
     setCredentials(credentials?: ICloudCredentials, skipPersisting?: boolean): void;
     tryToLoadCredentialsFromSettings(): void;
-};
+}
 
-class APIStateImplementation implements IApiState {
-    private _local: IApiLocalState;
-    private _localIsLoading: boolean;
-    private _localDataChanged = new Signal<this, void>(this);
+class APILocalStateImplementation implements IApiLocalState {
+    private _builds: Array<local.ILocalBuildInformation>;
+    private _deployments: Array<local.ILocalDeploymentInformation>;
+    private _buildStatus: local.ILocalBuildStatus;
 
-    private _cloud: IApiCloudState;
-    private _cloudIsLoading: boolean;
-    private _cloudDataChanged = new Signal<this, void>(this);
+    private _isLoading: boolean;
+    private _dataChanged = new Signal<this, void>(this);
+
+    constructor() {
+        this._isLoading = false;
+        this._builds = [];
+        this._deployments = [];
+        this._buildStatus = {
+            started: false,
+            finished: false
+        };
+    }
+
+    get builds(): Array<local.ILocalBuildInformation> {
+        return this._builds;
+    }
+    get deployments(): Array<local.ILocalDeploymentInformation> {
+        return this._deployments;
+    }
+    get buildStatus(): local.ILocalBuildStatus {
+        return this._buildStatus;
+    }
+
+    get isLoading(): boolean {
+        return this._isLoading;
+    }
+
+    get onDataChanged(): ISignal<this, void> {
+        return this._dataChanged;
+    }
+
+    signalLoadingStarted(): void {
+        this._isLoading = true;
+        this._dataChanged.emit(null);
+    }
+
+    updateAllState(data?: local.ILocalAllEntitiesResponse): void {
+        if (data) {
+            this._builds = data.builds;
+            this._deployments = data.deployments;
+            this._buildStatus = data.buildStatus;
+        }
+        this._isLoading = false;
+        this._dataChanged.emit(null);
+    }
+
+    updateBuildState(data: local.ILocalBuildStatus): void {
+        this._buildStatus = data;
+        this._dataChanged.emit(null);
+    }
+}
+
+class APICloudStateImplementation implements IApiCloudState {
+    private _trainings: Array<cloud.ICloudTrainingResponse>;
+    private _deployments: Array<cloud.ICloudDeploymentResponse>;
+    private _vcss: Array<cloud.IVCSResponse>
+
+    private _isLoading: boolean;
+    private _dataChanged = new Signal<this, void>(this);
 
     private _credentials?: ICloudCredentials;
-
     private _appState: IStateDB;
 
     constructor(appState: IStateDB) {
-        this._local = {
-            builds: [],
-            deployments: [],
-            buildStatus: {
-                started: false,
-                finished: false
-            }
-        };
-        this._localIsLoading = false;
-
-        this._cloud = {
-            trainings: [],
-            deployments: [],
-            vcss: []
-        }
-        this._cloudIsLoading = false;
-
+        this._isLoading = false;
+        this._trainings = [];
+        this._deployments = [];
+        this._vcss = [];
         this._credentials = null;
         this._appState = appState;
     }
 
-    get local(): IApiLocalState {
-        return this._local;
+    get trainings(): Array<cloud.ICloudTrainingResponse> {
+        return this._trainings;
     }
 
-    get localIsLoading(): boolean {
-        return this._localIsLoading;
+    get deployments(): Array<cloud.ICloudDeploymentResponse> {
+        return this._deployments;
     }
 
-    get onLocalDataChanged(): ISignal<this, void> {
-        return this._localDataChanged;
+    get vcss(): Array<cloud.IVCSResponse> {
+        return this._vcss;
     }
 
-    get cloud(): IApiCloudState {
-        return this._cloud;
+    get isLoading(): boolean {
+        return this._isLoading;
     }
 
-    get cloudIsLoading(): boolean {
-        return this._cloudIsLoading;
+    get onDataChanged(): ISignal<this, void> {
+        return this._dataChanged;
     }
 
-    get onCloudDataChanged(): ISignal<this, void> {
-        return this._cloudDataChanged;
+    signalLoadingStarted(): void {
+        this._isLoading = true;
+        this._dataChanged.emit(null);
     }
 
-    signalLocalLoadingStarted(): void {
-        this._localIsLoading = true;
-        this._localDataChanged.emit(null);
-    }
-
-    updateEntireLocalState(data?: local.ILocalAllEntitiesResponse): void {
+    updateAllState(data?: cloud.ICloudAllEntitiesResponse): void {
         if (data) {
-            this._local = data;
+            this._trainings = data.trainings;
+            this._deployments = data.deployments;
+            this._vcss = data.vcss;
         }
-        this._localIsLoading = false;
-        this._localDataChanged.emit(null);
-    }
-
-    updateLocalBuildState(data: local.ILocalBuildStatus): void {
-        this._local = {
-            ...this._local,
-            buildStatus: data
-        };
-        this._localDataChanged.emit(null);
-    }
-
-    signalCloudLoadingStarted(): void {
-        this._cloudIsLoading = true;
-        this._cloudDataChanged.emit(null);
-    }
-
-    updateEntireCloudState(data?: cloud.ICloudAllEntitiesResponse): void {
-        if (data) {
-            this._cloud = data;
-        }
-        this._cloudIsLoading = false;
-        this._cloudDataChanged.emit(null);
+        this._isLoading = false;
+        this._dataChanged.emit(null);
     }
 
     get credentials(): ICloudCredentials {
@@ -181,7 +197,7 @@ class APIStateImplementation implements IApiState {
                 });
             }
         }
-        this._cloudDataChanged.emit(null);
+        this._dataChanged.emit(null);
     }
 
     tryToLoadCredentialsFromSettings(): void {
@@ -204,6 +220,10 @@ class APIStateImplementation implements IApiState {
     }
 }
 
-export function buildInitialAPIState(appState: IStateDB): IApiState {
-    return new APIStateImplementation(appState);
+export function buildInitialLocalAPIState(): IApiLocalState {
+    return new APILocalStateImplementation();
+}
+
+export function buildInitialCloudAPIState(appState: IStateDB): IApiCloudState {
+    return new APICloudStateImplementation(appState);
 }

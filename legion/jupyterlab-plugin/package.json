@@ -64,7 +64,6 @@
   },
   "jupyterlab": {
     "extension": true,
-    "schemaDir": "schema",
     "discovery": {
       "server": {
         "managers": [

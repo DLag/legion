@@ -18,7 +18,8 @@ import { ServiceManager } from '@jupyterlab/services';
 import { ISplashScreen, InstanceTracker } from "@jupyterlab/apputils";
 import { FileBrowser } from '@jupyterlab/filebrowser';
 
-import { IApiState } from '../models';
+import { IApiCloudState, IApiLocalState } from '../models';
+import { ILegionPluginMode } from '../models/core';
 import { ILegionApi } from '../api';
 
 
@@ -85,6 +86,8 @@ export interface IAddCommandsOptions {
     tracker: InstanceTracker<FileBrowser>;
     services: ServiceManager;
     api: ILegionApi;
-    apiState: IApiState;
+    apiLocalState?: IApiLocalState;
+    apiCloudState?: IApiCloudState;
     splash: ISplashScreen;
+    mode: ILegionPluginMode;
 }

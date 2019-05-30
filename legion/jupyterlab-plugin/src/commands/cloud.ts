@@ -41,7 +41,7 @@ export function addCommands(options: IAddCommandsOptions) {
 
             let values = (args as unknown) as cloudDialogs.ICreateNewTrainingDialogValues;
 
-            cloudDialogs.showCreateNewTrainingDialog(options.apiState.cloud.vcss, values)
+            cloudDialogs.showCreateNewTrainingDialog(options.apiCloudState.vcss, values)
                 .then(({ value, button }) => {
                     if (button.accept) {
                         if (!value.isFinished) {
@@ -49,7 +49,7 @@ export function addCommands(options: IAddCommandsOptions) {
                                 .then(() => commands.execute(CommandIDs.newCloudTraining, (value as unknown) as ReadonlyJSONObject))
                         } else {
                             let splashScreen = options.splash.show();
-                            options.api.cloud.createCloudTraining(value as models.ICloudTrainingRequest, options.apiState.credentials).then(() => {
+                            options.api.cloud.createCloudTraining(value as models.ICloudTrainingRequest, options.apiCloudState.credentials).then(() => {
                                 splashScreen.dispose();
                                 commands.execute(CommandIDs.refreshCloud, {});
                             }).catch(err => {
@@ -95,7 +95,7 @@ export function addCommands(options: IAddCommandsOptions) {
                             let splashScreen = options.splash.show();
                             options.api.cloud.removeCloudTraining({
                                 name: name
-                            }, options.apiState.credentials).then(() => {
+                            }, options.apiCloudState.credentials).then(() => {
                                 splashScreen.dispose();
                                 commands.execute(CommandIDs.refreshCloud, {});
                             }).catch(err => {
@@ -109,7 +109,7 @@ export function addCommands(options: IAddCommandsOptions) {
                     dialogs.showChooseDialog(
                         'Choose training to remove',
                         'Please choose one training from list',
-                        options.apiState.cloud.trainings.map(training => {
+                        options.apiCloudState.trainings.map(training => {
                             return {
                                 value: training.name,
                                 text: training.name
@@ -143,7 +143,7 @@ export function addCommands(options: IAddCommandsOptions) {
                                 replicas: value.replicas,
                                 livenessProbeInitialDelay: 5,
                                 readinessProbeInitialDelay: 3
-                            }, options.apiState.credentials).then(_ => {
+                            }, options.apiCloudState.credentials).then(_ => {
                                 splashScreen.dispose();
                                 commands.execute(CommandIDs.refreshCloud, {});
                             }).catch(err => {
@@ -157,7 +157,7 @@ export function addCommands(options: IAddCommandsOptions) {
                         'Choose image to deploy',
                         'Please choose finished training',
                         'or type image name manually',
-                        options.apiState.cloud.trainings.filter(training => training.status.modelImage.length > 0).map(training => {
+                        options.apiCloudState.trainings.filter(training => training.status.modelImage.length > 0).map(training => {
                             return {
                                 value: training.status.modelImage,
                                 text: training.name
@@ -189,7 +189,7 @@ export function addCommands(options: IAddCommandsOptions) {
                     options.api.cloud.scaleCloudDeployment({
                         name,
                         newScale
-                    }, options.apiState.credentials).then(_ => {
+                    }, options.apiCloudState.credentials).then(_ => {
                         splashScreen.dispose();
                         commands.execute(CommandIDs.refreshCloud, {});
                     }).catch(err => {
@@ -211,7 +211,7 @@ export function addCommands(options: IAddCommandsOptions) {
                     dialogs.showChooseDialog(
                         'Choose deployment to scale',
                         'Please choose one deployment from list',
-                        options.apiState.cloud.deployments.map(deployment => {
+                        options.apiCloudState.deployments.map(deployment => {
                             return {
                                 value: deployment.name,
                                 text: deployment.name
@@ -220,7 +220,7 @@ export function addCommands(options: IAddCommandsOptions) {
                         'Scale deployment',
                         false
                     ).then(({ value }) => {
-                        const targetDeployment = options.apiState.cloud.deployments.find(deployment => deployment.name == value.value);
+                        const targetDeployment = options.apiCloudState.deployments.find(deployment => deployment.name == value.value);
                         if (targetDeployment != undefined) {
                             commands.execute(CommandIDs.scaleCloudDeployment, {
                                 name: value.value,
@@ -253,7 +253,7 @@ export function addCommands(options: IAddCommandsOptions) {
                             let splashScreen = options.splash.show();
                             options.api.cloud.removeCloudDeployment({
                                 name: name
-                            }, options.apiState.credentials).then(() => {
+                            }, options.apiCloudState.credentials).then(() => {
                                 splashScreen.dispose();
                                 commands.execute(CommandIDs.refreshCloud, {});
                             }).catch(err => {
@@ -267,7 +267,7 @@ export function addCommands(options: IAddCommandsOptions) {
                     dialogs.showChooseDialog(
                         'Choose deployment to remove',
                         'Please choose one deployment from list',
-                        options.apiState.cloud.deployments.map(deployment => {
+                        options.apiCloudState.deployments.map(deployment => {
                             return {
                                 value: deployment.name,
                                 text: deployment.name
@@ -295,7 +295,7 @@ export function addCommands(options: IAddCommandsOptions) {
                     options.api.cloud.issueCloudAccess({
                         model_id: modelID,
                         model_version: modelVersion
-                    }, options.apiState.credentials).then(response => {
+                    }, options.apiCloudState.credentials).then(response => {
                         splashScreen.dispose();
                         showDialog({
                             title: `Generated token`,
@@ -319,4 +319,28 @@ export function addCommands(options: IAddCommandsOptions) {
         }
     });
 
+    commands.addCommand(CommandIDs.refreshCloud, {
+        label: 'Force data refresh for cloud mode',
+        caption: 'Force data synchronization for cloud mode',
+        execute: () => {
+            options.apiCloudState.signalLoadingStarted();
+
+            options.api.cloud.getCloudAllEntities(options.apiCloudState.credentials).then(response => {
+                options.apiCloudState.updateAllState(response);
+            }).catch(err => {
+                options.apiCloudState.updateAllState();
+                showErrorMessage('Can not forcefully update data for cloud mode', err);
+            });
+        }
+    });
+
+    commands.addCommand(CommandIDs.openCloudModelPlugin, {
+        label: 'Cloud mode interface',
+        caption: 'Go to Cloud mode interface',
+        execute: () => {
+            try {
+                options.app.shell.activateById('legion-cloud-sessions-widget');
+            } catch (err) { }
+        }
+    });
 }

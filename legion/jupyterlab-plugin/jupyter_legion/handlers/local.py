@@ -16,12 +16,14 @@
 import typing
 import multiprocessing
 import time
+import uuid
 
 from tornado.web import HTTPError
 
+from legion.sdk import config
 from legion.sdk.clients.edi import LocalEdiClient
-from legion.sdk.containers.docker import get_current_docker_container_id
-from legion.sdk.containers.definitions import ModelDeploymentDescription, ModelBuildInformation
+from legion.sdk.containers.docker import get_current_docker_container_id, build_model_docker_image
+from legion.sdk.containers.definitions import ModelDeploymentDescription, ModelBuildInformation, ModelBuildParameters
 
 from .base import BaseLegionHandler
 from .datamodels.local import *
@@ -33,10 +35,12 @@ BUILD_LOCK = multiprocessing.Lock()
 def start_legion_build():
     """
     Start building (legionctl build)
-    TODO: Replace to real call
     :return: None
     """
-    time.sleep(20)
+    params = ModelBuildParameters(config.MODEL_FILE,
+                                  str(uuid.uuid4()))
+
+    build_model_docker_image(params)
 
 
 class BaseLocalLegionHandler(BaseLegionHandler):
@@ -146,8 +150,7 @@ class LocalBuildsHandler(BaseLocalLegionHandler):
 
     def post(self):
         try:
-            pass
-            #get_current_docker_container_id()
+            get_current_docker_container_id()
         except Exception:
             raise HTTPError(log_message='JupyterLab is run out of container (container ID is unavailable)')
 
